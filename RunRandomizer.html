@@ -50,7 +50,7 @@
     text-shadow: 0 0 30px rgba(224,176,96,0.4);
     margin-bottom: 0.4rem;
   }
-  .hero-title {
+    .hero-title {
       font-family: 'Pacifico', cursive;
       font-size: 2.7rem; line-height: 1.8;
       background: linear-gradient(130deg, #ff9ed2 0%, #ffffff 45%, #ff6eb4 100%);
@@ -73,6 +73,7 @@
   }
   .mode-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(176,110,243,0.1); box-shadow: 0 0 16px rgba(176,110,243,0.25); }
   .mode-btn.hard.active { border-color: var(--accent2); color: var(--accent2); background: rgba(240,96,144,0.1); box-shadow: 0 0 16px rgba(240,96,144,0.25); }
+  .mode-btn.xhard.active { border-color: #ff3060; color: #ff3060; background: rgba(255,48,96,0.13); box-shadow: 0 0 16px rgba(255,48,96,0.32); }
 
   .hard-note { text-align: center; font-size: 0.83rem; color: var(--accent2); font-style: italic; margin-bottom: 1rem; display: none; }
   .hard-note.visible { display: block; }
@@ -167,9 +168,12 @@
   .btn-roll:hover { background: linear-gradient(135deg, rgba(176,110,243,0.35), rgba(240,96,144,0.2)); box-shadow: 0 0 35px rgba(176,110,243,0.35); transform: translateY(-1px); }
   .btn-roll.hard { border-color: var(--accent2); color: var(--accent2); background: linear-gradient(135deg, rgba(240,96,144,0.2), rgba(176,110,243,0.1)); box-shadow: 0 0 20px rgba(240,96,144,0.2); }
   .btn-roll.hard:hover { box-shadow: 0 0 35px rgba(240,96,144,0.35); }
+  .btn-roll.xhard { border-color: #ff3060; color: #ff3060; background: linear-gradient(135deg, rgba(255,48,96,0.22), rgba(176,110,243,0.1)); box-shadow: 0 0 20px rgba(255,48,96,0.25); }
+  .btn-roll.xhard:hover { box-shadow: 0 0 35px rgba(255,48,96,0.42); }
 
   #output { display: none; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius); padding: 1.5rem 1.8rem; margin-top: 1rem; box-shadow: 0 0 40px rgba(176,110,243,0.12); }
   #output.hard-result { border-color: var(--accent2); box-shadow: 0 0 40px rgba(240,96,144,0.12); }
+  #output.xhard-result { border-color: #ff3060; box-shadow: 0 0 40px rgba(255,48,96,0.18); }
   #output h2 { font-family: 'Pacifico', serif; font-size: 0.85rem; color: var(--gold2); letter-spacing: 0.08em; margin-bottom: 1rem; text-align: center; }
   #output-text { font-size: 1rem; line-height: 1.9; color: var(--text); }
   .result-block { margin-bottom: 0.9rem; }
@@ -209,8 +213,10 @@
   <div class="mode-bar">
     <button class="mode-btn active" id="btn-normal" onclick="setMode('normal')">Normal Roll</button>
     <button class="mode-btn hard" id="btn-hard" onclick="setMode('hard')">Hard Mode</button>
+    <button class="mode-btn xhard" id="btn-xhard" onclick="setMode('xhard')">Extra Hard</button>
   </div>
-  <div class="hard-note" id="hard-note">Hard Mode: Love Interest locked to include <strong>Gwylan</strong> · Divine Transformation locked to <strong>Angel</strong></div>
+  <div class="hard-note" id="hard-note-hard">Hard Mode: Love Interest locked to include <strong>Gwylan</strong></div>
+  <div class="hard-note" id="hard-note-xhard">Extra Hard Mode: Love Interest locked to include <strong>Gwylan</strong> · Divine Transformation locked to <strong>Angel</strong></div>
 
   <!-- SEX -->
   <div class="section open">
@@ -498,10 +504,19 @@ function setMode(m) {
   currentMode = m;
   document.getElementById('btn-normal').classList.toggle('active', m === 'normal');
   document.getElementById('btn-hard').classList.toggle('active', m === 'hard');
+  document.getElementById('btn-xhard').classList.toggle('active', m === 'xhard');
+
   const btn = document.getElementById('roll-btn');
-  btn.classList.toggle('hard', m === 'hard');
-  btn.textContent = m === 'hard' ? '⚔ Hard Mode Roll ⚔' : '✦ Roll the Dice ✦';
-  document.getElementById('hard-note').classList.toggle('visible', m === 'hard');
+  btn.classList.remove('hard', 'xhard');
+  if (m === 'hard')  btn.classList.add('hard');
+  if (m === 'xhard') btn.classList.add('xhard');
+
+  if (m === 'normal') btn.textContent = '✦ Roll the Dice ✦';
+  if (m === 'hard')   btn.textContent = '⚔ Hard Mode Roll ⚔';
+  if (m === 'xhard')  btn.textContent = '💀 Extra Hard Roll 💀';
+
+  document.getElementById('hard-note-hard').classList.toggle('visible', m === 'hard');
+  document.getElementById('hard-note-xhard').classList.toggle('visible', m === 'xhard');
 }
 
 function buildFeatUI() {
@@ -621,8 +636,10 @@ function togglePin(idx, cat, name) {
 }
 
 function doRoll() {
-  const hard = currentMode === 'hard';
-  const sex  = sexType;
+  const hard  = currentMode === 'hard';
+  const xhard = currentMode === 'xhard';
+  const anyHard = hard || xhard;
+  const sex   = sexType;
 
   const awareness     = pick(DATA.awareness);
   const background    = pick(DATA.background);
@@ -644,7 +661,8 @@ function doRoll() {
   }
 
   const animalT  = pick(DATA.animalTransform);
-  const divineT  = hard ? 'Angel' : pick(DATA.divineTransform);
+  // Extra Hard: divine locked to Angel. Hard & Normal: fully random.
+  const divineT  = xhard ? 'Angel' : pick(DATA.divineTransform);
   const hasAnimal = animalT !== 'None';
   const hasDivine = divineT !== 'None';
   let transformText = '';
@@ -655,8 +673,9 @@ function doRoll() {
   } else if (hasAnimal) transformText = `Your end transformation goal will be becoming a <strong>${animalT.toLowerCase()}</strong>.`;
   else if (hasDivine)   transformText = `Your end transformation goal will be becoming <strong>${divineT.toLowerCase()}</strong>.`;
 
+  // Hard & Extra Hard: Gwylan guaranteed in love interests
   let loveInterests;
-  if (hard) {
+  if (anyHard) {
     const others = pickN(DATA.loveInterests.filter(x => x !== 'Gwylan'), 2);
     loveInterests = ['Gwylan', ...others];
   } else {
@@ -680,7 +699,7 @@ function doRoll() {
   const sexualFame     = pick(DATA.sexualFame);
   const sexTrait       = pick(DATA.sexTrait);
   const parasite       = pick(DATA.parasite);
-  const badEnding      = hard ? null : pick(DATA.badEnding);
+  const badEnding      = xhard ? null : pick(DATA.badEnding);
 
   let birthText = '';
   if (sex === 'male') {
@@ -745,7 +764,9 @@ function doRoll() {
 
   const out = document.getElementById('output');
   out.style.display = 'block';
-  out.classList.toggle('hard-result', hard);
+  out.classList.remove('hard-result', 'xhard-result');
+  if (hard)  out.classList.add('hard-result');
+  if (xhard) out.classList.add('xhard-result');
   out.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
