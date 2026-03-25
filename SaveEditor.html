@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoL Save Editor</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --border: #3d1f2b;
+      --accent: #ff6ab0;
+      --accent2: #be3072;
+      --text: #000000;
+      --muted: #2f2f30;
+      --success: #3d694c;
+      --error: #fc4242;
+      --gutter: #f0e0eb;
+      --gutterText: #be3072;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    body.dark {
+      --bg: #1a0e13;
+      --panel: #1a0e13;
+      --border: #ff6ab0;
+      --accent: #ffffff;
+      --accent2: #ffadd4;
+      --text: #ffffff;
+      --muted: #ffffff;
+      --success: #5dbf7e;
+      --error: #fc4242;
+      --gutter: #1a0813;
+      --gutterText: #ff6ab0;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .title {
+      text-align: center;
+      color: var(--accent);
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .subtitle, .mini {
+      text-align: center;
+      color: var(--muted);
+      margin: 0;
+    }
+    .mini { margin-bottom: 14px; font-size: .95rem; }
+    .toggle-dark {
+      display: inline-block;
+      margin: 8px auto 18px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--accent);
+      user-select: none;
+    }
+    .center { text-align: center; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .panel-head {
+      padding: 14px 18px 8px;
+      color: var(--accent2);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 18px;
+    }
+    .panel-body { padding: 18px; }
+
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 14px;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .dropzone.dragover {
+      transform: scale(1.01);
+      background: rgba(255,106,176,.08);
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .row > * { min-width: 0; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 500px;
+      line-height: 1.45;
+      tab-size: 2;
+      font-family: Consolas, Monaco, monospace;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--accent);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: .9; }
+    .btn.secondary { color: var(--accent2); }
+    .btn.success { color: var(--success); }
+    .btn.danger { color: var(--error); }
+    .btn.muted { color: var(--muted); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      min-height: 20px;
+      color: var(--muted);
+    }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--error); }
+    .status.info { color: var(--accent); }
+
+    .hidden { display: none !important; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tab {
+      cursor: pointer;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--muted);
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    .tab.active {
+      color: var(--accent);
+      border-color: var(--border);
+    }
+
+    .quick-note, .json-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .category {
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+    .cat-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--accent2);
+      font-weight: 700;
+      margin-bottom: 8px;
+      user-select: none;
+    }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .editor-wrap {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .gutter {
+      background: var(--gutter);
+      color: var(--gutterText);
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      padding: 10px 8px;
+      text-align: right;
+      user-select: none;
+      white-space: pre;
+      overflow: hidden;
+      line-height: 1.45;
+    }
+    .editor-area {
+      position: relative;
+    }
+    .search-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .search-count {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .footer-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 14px; }
+      .editor-wrap { grid-template-columns: 44px 1fr; }
+      textarea { min-height: 380px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">ᰔ DoL Save Editor</div>
+    <p class="subtitle">by angeldevii</p>
+    <p class="mini">✦ Load › Edit › Download ✦</p>
+    <div class="center"><span class="toggle-dark" id="darkToggle">🌙 Dark Mode</span></div>
+
+    <div class="panel">
+      <div class="panel-head">ᰔ Load Save File</div>
+      <div class="divider"></div>
+      <div class="panel-body">
+        <div class="dropzone" id="dropzone">
+          <div style="font-size: 30px; margin-bottom: 8px;">📂</div>
+          <div>Click or drop your <strong>.save</strong> file here</div>
+          <div class="footer-note">Also accepts raw LZString / JSON text files</div>
+          <input type="file" id="fileInput" class="hidden" accept=".save,.txt,.json,*/*" />
+        </div>
+
+        <div style="margin-bottom:6px;color:var(--muted);font-size:14px;">Or paste raw save string:</div>
+        <div class="row">
+          <input type="text" id="pasteInput" placeholder="Paste raw save string here" />
+          <button class="btn" id="pasteLoadBtn">Load</button>
+        </div>
+        <div class="status" id="loadStatus"></div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="editorPanel">
+      <div class="panel-head">ᰔ Edit Save Data</div>
+      <div style="padding:0 18px 8px;color:var(--muted);font-style:italic;" id="fileNameLabel"></div>
+      <div class="divider"></div>
+      <div class="panel-body">
+        <div class="tabs">
+          <div class="tab active" data-tab="quick">Quick Edit</div>
+          <div class="tab" data-tab="json">Raw JSON</div>
+        </div>
+
+        <div id="quickTab">
+          <div class="quick-note">Common fields auto-detected from your save. Changes sync to Raw JSON when you switch tabs.</div>
+          <div id="quickGrid"></div>
+          <div class="footer-note">⚠ Not all values may be present depending on your game version/progress.</div>
+        </div>
+
+        <div id="jsonTab" class="hidden">
+          <div class="row" style="margin-bottom:10px;">
+            <button class="btn" id="formatBtn">Format JSON</button>
+            <button class="btn secondary" id="validateBtn">Validate</button>
+            <button class="btn muted" id="undoBtn" disabled>↩ Undo</button>
+            <button class="btn muted" id="redoBtn" disabled>↪ Redo</button>
+            <button class="btn danger" id="resetBtn">⟳ Reset</button>
+          </div>
+
+          <div class="search-row">
+            <input type="text" id="searchInput" placeholder="Search" />
+            <button class="btn secondary" id="prevSearchBtn">◀</button>
+            <button class="btn secondary" id="nextSearchBtn">▶</button>
+            <span class="search-count" id="searchCount"></span>
+          </div>
+
+          <div class="editor-wrap">
+            <pre class="gutter" id="lineNumbers">1</pre>
+            <div class="editor-area">
+              <textarea id="jsonText" spellcheck="false"></textarea>
+            </div>
+          </div>
+          <div class="status" id="jsonStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="downloadPanel">
+      <div class="panel-head">ᰔ Save & Download</div>
+      <div class="divider"></div>
+      <div class="panel-body">
+        <div class="row">
+          <button class="btn success" id="downloadBtn">⬇ Save .save File</button>
+          <button class="btn secondary" id="copyBtn">Copy Raw String</button>
+        </div>
+        <div class="status" id="downloadStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <script>
+    const QUICK_CATEGORIES = [
+      ["Basic", [
+        ["money", "Money"],
+        ["time", "Time (minutes)"],
+        ["day", "Day"],
+      ]],
+      ["Stats", [
+        ["pain", "Pain"],
+        ["arousal", "Arousal"],
+        ["tiredness", "Fatigue"],
+        ["stress", "Stress"],
+        ["trauma", "Trauma"],
+        ["control", "Control"],
+        ["drunk", "Alcohol"],
+        ["drugged", "Drugs"],
+        ["hallucinogen", "Hallucinogen"],
+      ]],
+      ["Characteristics", [
+        ["purity", "Purity"],
+        ["beauty", "Beauty"],
+        ["physique", "Physique"],
+        ["willpower", "Willpower"],
+        ["awareness", "Awareness"],
+        ["promiscuity", "Promiscuity"],
+        ["exhibitionism", "Exhibitionism"],
+        ["deviancy", "Deviancy"],
+        ["submissive", "Submissive"],
+        ["dom", "Dominant"],
+        ["sadism", "Sadism"],
+        ["masochism", "Masochism"],
+      ]],
+      ["Skills", [
+        ["skulduggery", "Skulduggery"],
+        ["dancing", "Dance"],
+        ["swimming", "Swimming"],
+        ["athletics", "Athletics"],
+        ["tending", "Tending"],
+        ["housekeeping", "Housekeeping"],
+        ["brawling", "Brawling"],
+        ["footwork", "Footwork"],
+        ["striking", "Striking"],
+        ["kicking", "Kicking"],
+      ]],
+      ["World Corruption", [
+        ["world_corruption_soft", "Soft Corruption"],
+        ["world_corruption_hard", "Hard Corruption"],
+        ["world_corruption_reduced", "Reduced Corruption"],
+      ]],
+    ];
+
+    const els = {
+      body: document.body,
+      darkToggle: document.getElementById('darkToggle'),
+      dropzone: document.getElementById('dropzone'),
+      fileInput: document.getElementById('fileInput'),
+      pasteInput: document.getElementById('pasteInput'),
+      pasteLoadBtn: document.getElementById('pasteLoadBtn'),
+      loadStatus: document.getElementById('loadStatus'),
+      editorPanel: document.getElementById('editorPanel'),
+      downloadPanel: document.getElementById('downloadPanel'),
+      fileNameLabel: document.getElementById('fileNameLabel'),
+      quickTab: document.getElementById('quickTab'),
+      jsonTab: document.getElementById('jsonTab'),
+      quickGrid: document.getElementById('quickGrid'),
+      jsonText: document.getElementById('jsonText'),
+      lineNumbers: document.getElementById('lineNumbers'),
+      jsonStatus: document.getElementById('jsonStatus'),
+      formatBtn: document.getElementById('formatBtn'),
+      validateBtn: document.getElementById('validateBtn'),
+      undoBtn: document.getElementById('undoBtn'),
+      redoBtn: document.getElementById('redoBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      searchInput: document.getElementById('searchInput'),
+      prevSearchBtn: document.getElementById('prevSearchBtn'),
+      nextSearchBtn: document.getElementById('nextSearchBtn'),
+      searchCount: document.getElementById('searchCount'),
+      downloadBtn: document.getElementById('downloadBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      downloadStatus: document.getElementById('downloadStatus'),
+      tabs: Array.from(document.querySelectorAll('.tab')),
+    };
+
+    const state = {
+      saveData: null,
+      variables: null,
+      originalFilename: 'edited.save',
+      activeTab: 'quick',
+      quickVars: {},
+      categoryOpen: {},
+      undoStack: [],
+      redoStack: [],
+      originalJson: '',
+      maxUndo: 100,
+      searchMatches: [],
+      searchCurrent: -1,
+      dark: false,
+    };
+
+    function setStatus(el, kind, msg) {
+      el.className = 'status' + (kind ? ' ' + kind : '');
+      el.textContent = msg || '';
+    }
+
+    function updateLineNumbers() {
+      const lines = els.jsonText.value.split('\n').length;
+      let out = '';
+      for (let i = 1; i <= lines; i++) out += i + '\n';
+      els.lineNumbers.textContent = out.trimEnd();
+    }
+
+    function syncScroll() {
+      els.lineNumbers.scrollTop = els.jsonText.scrollTop;
+    }
+
+    function getPath(obj, path) {
+      const keys = path.split('.');
+      let cur = obj;
+      for (const k of keys) {
+        if (!cur || typeof cur !== 'object' || !(k in cur)) return [null, false];
+        cur = cur[k];
+      }
+      return [cur, true];
+    }
+
+    function setPath(obj, path, value) {
+      const keys = path.split('.');
+      let cur = obj;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!cur || typeof cur !== 'object' || !(keys[i] in cur)) return;
+        cur = cur[keys[i]];
+      }
+      const last = keys[keys.length - 1];
+      if (cur && typeof cur === 'object' && last in cur) {
+        const orig = cur[last];
+        if (typeof orig === 'number') {
+          const num = Number(value);
+          if (!Number.isNaN(num)) {
+            cur[last] = Number.isInteger(orig) ? Math.trunc(num) : num;
+            return;
+          }
+        }
+        cur[last] = value;
+      }
+    }
+
+    function extractVariables(obj) {
+      try { return obj.state.delta[0].variables; } catch {}
+      try { return obj.state.history[0].variables; } catch {}
+      return obj;
+    }
+
+    function applyVariables(obj, variables) {
+      try { obj.state.delta[0].variables = variables; return; } catch {}
+      try { obj.state.history[0].variables = variables; } catch {}
+    }
+
+    function tryDecode(raw) {
+      raw = (raw || '').trim();
+      if (!raw) return [null, null];
+
+      try { return [JSON.parse(raw), 'json']; } catch {}
+
+      try {
+        const dec = LZString.decompressFromBase64(raw);
+        if (dec) return [JSON.parse(dec), 'base64'];
+      } catch {}
+
+      try {
+        const dec = LZString.decompress(raw);
+        if (dec) return [JSON.parse(dec), 'decompress'];
+      } catch {}
+
+      try {
+        const dec = LZString.decompressFromEncodedURIComponent(raw.replace(/ /g, '+'));
+        if (dec) return [JSON.parse(dec), 'uri'];
+      } catch {}
+
+      try {
+        const dec = LZString.decompressFromUTF16(raw);
+        if (dec) return [JSON.parse(dec), 'utf16'];
+      } catch {}
+
+      return [null, null];
+    }
+
+    function tryEncode(obj) {
+      return LZString.compressToBase64(JSON.stringify(obj));
+    }
+
+    function pushUndoSnapshot() {
+      const current = els.jsonText.value;
+      if (state.undoStack.length && state.undoStack[state.undoStack.length - 1] === current) return;
+      state.undoStack.push(current);
+      state.redoStack = [];
+      if (state.undoStack.length > state.maxUndo) state.undoStack.shift();
+      updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons() {
+      els.undoBtn.disabled = state.undoStack.length === 0;
+      els.redoBtn.disabled = state.redoStack.length === 0;
+    }
+
+    function undoJson() {
+      if (!state.undoStack.length) {
+        setStatus(els.jsonStatus, 'info', 'Nothing to undo.');
+        return;
+      }
+      const current = els.jsonText.value;
+      state.redoStack.push(current);
+      state.undoStack.pop();
+      const prev = state.undoStack.length ? state.undoStack[state.undoStack.length - 1] : state.originalJson;
+      els.jsonText.value = prev;
+      updateLineNumbers();
+      updateUndoRedoButtons();
+      setStatus(els.jsonStatus, 'info', '↩ Undone.');
+      searchJson();
+    }
+
+    function redoJson() {
+      if (!state.redoStack.length) {
+        setStatus(els.jsonStatus, 'info', 'Nothing to redo.');
+        return;
+      }
+      const current = els.jsonText.value;
+      state.undoStack.push(current);
+      const next = state.redoStack.pop();
+      els.jsonText.value = next;
+      updateLineNumbers();
+      updateUndoRedoButtons();
+      setStatus(els.jsonStatus, 'info', '↪ Redone.');
+      searchJson();
+    }
+
+    function resetJson() {
+      if (!state.originalJson) return;
+      els.jsonText.value = state.originalJson;
+      state.undoStack = [];
+      state.redoStack = [];
+      updateUndoRedoButtons();
+      updateLineNumbers();
+      setStatus(els.jsonStatus, 'ok', '⟳ Reset to original loaded state.');
+      searchJson();
+    }
+
+    function populateQuickGrid() {
+      els.quickGrid.innerHTML = '';
+      state.quickVars = {};
+      let totalFound = 0;
+
+      for (const [catName, fields] of QUICK_CATEGORIES) {
+        const catFields = [];
+        for (const [path, label] of fields) {
+          const [val, exists] = getPath(state.variables, path);
+          if (exists) catFields.push([path, label, val]);
+        }
+        if (!catFields.length) continue;
+        totalFound += catFields.length;
+
+        if (!(catName in state.categoryOpen)) state.categoryOpen[catName] = true;
+
+        const cat = document.createElement('div');
+        cat.className = 'category';
+
+        const head = document.createElement('div');
+        head.className = 'cat-head';
+        const arrow = document.createElement('span');
+        arrow.textContent = state.categoryOpen[catName] ? '▼' : '▶';
+        const text = document.createElement('span');
+        text.textContent = catName;
+        head.append(arrow, text);
+
+        const grid = document.createElement('div');
+        grid.className = 'cat-grid';
+        if (!state.categoryOpen[catName]) grid.classList.add('hidden');
+
+        head.addEventListener('click', () => {
+          state.categoryOpen[catName] = !state.categoryOpen[catName];
+          arrow.textContent = state.categoryOpen[catName] ? '▼' : '▶';
+          grid.classList.toggle('hidden', !state.categoryOpen[catName]);
+        });
+
+        for (const [path, label, val] of catFields) {
+          const field = document.createElement('div');
+          field.className = 'field';
+          const lab = document.createElement('label');
+          lab.textContent = label;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = String(val);
+          state.quickVars[path] = input;
+          field.append(lab, input);
+          grid.appendChild(field);
+        }
+
+        cat.append(head, grid);
+        els.quickGrid.appendChild(cat);
+      }
+
+      if (!totalFound) {
+        els.quickGrid.innerHTML = '<div style="color:var(--muted);padding:8px 0;">No common fields found. Use Raw JSON tab to edit manually.</div>';
+      }
+    }
+
+    function syncQuickToJson() {
+      if (!state.saveData) return;
+      for (const [path, input] of Object.entries(state.quickVars)) {
+        setPath(state.variables, path, input.value);
+      }
+      applyVariables(state.saveData, state.variables);
+      els.jsonText.value = JSON.stringify(state.saveData, null, 2);
+      updateLineNumbers();
+      searchJson();
+    }
+
+    function switchTab(name) {
+      if (name === 'json') syncQuickToJson();
+      state.activeTab = name;
+      els.quickTab.classList.toggle('hidden', name !== 'quick');
+      els.jsonTab.classList.toggle('hidden', name !== 'json');
+      els.tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === name));
+      updateLineNumbers();
+    }
+
+    function loadRaw(raw, filename) {
+      const [obj] = tryDecode(raw);
+      if (!obj) {
+        setStatus(els.loadStatus, 'err', '✗ Could not decode. Make sure this is a valid DoL save file.');
+        return;
+      }
+
+      state.saveData = obj;
+      state.variables = extractVariables(obj);
+      state.originalFilename = filename || 'edited.save';
+      els.fileNameLabel.textContent = '— ' + state.originalFilename;
+
+      const pretty = JSON.stringify(obj, null, 2);
+      els.jsonText.value = pretty;
+      state.undoStack = [];
+      state.redoStack = [];
+      state.originalJson = pretty;
+      updateUndoRedoButtons();
+      updateLineNumbers();
+      populateQuickGrid();
+
+      els.editorPanel.classList.remove('hidden');
+      els.downloadPanel.classList.remove('hidden');
+      setStatus(els.loadStatus, 'ok', '♡ Loaded & decoded successfully!');
+      setStatus(els.jsonStatus, '', '');
+      setStatus(els.downloadStatus, '', '');
+    }
+
+    function formatJson() {
+      try {
+        const obj = JSON.parse(els.jsonText.value);
+        els.jsonText.value = JSON.stringify(obj, null, 2);
+        pushUndoSnapshot();
+        updateLineNumbers();
+        setStatus(els.jsonStatus, 'ok', '♡ Formatted.');
+        searchJson();
+      } catch (e) {
+        setStatus(els.jsonStatus, 'err', '✗ Invalid JSON: ' + e.message);
+      }
+    }
+
+    function validateJson() {
+      try {
+        JSON.parse(els.jsonText.value);
+        setStatus(els.jsonStatus, 'ok', '♡ Valid JSON.');
+      } catch (e) {
+        setStatus(els.jsonStatus, 'err', '✗ ' + e.message);
+      }
+    }
+
+    function searchJson() {
+      const q = els.searchInput.value.trim().toLowerCase();
+      state.searchMatches = [];
+      state.searchCurrent = -1;
+      if (!q) {
+        els.searchCount.textContent = '';
+        return;
+      }
+      const content = els.jsonText.value.toLowerCase();
+      let start = 0;
+      while (true) {
+        const idx = content.indexOf(q, start);
+        if (idx === -1) break;
+        state.searchMatches.push([idx, idx + q.length]);
+        start = idx + 1;
+      }
+      if (state.searchMatches.length) {
+        state.searchCurrent = 0;
+        highlightCurrent();
+      } else {
+        els.searchCount.textContent = 'No results';
+      }
+    }
+
+    function highlightCurrent() {
+      if (!state.searchMatches.length) return;
+      const [start, end] = state.searchMatches[state.searchCurrent];
+      els.jsonText.focus();
+      els.jsonText.setSelectionRange(start, end);
+      const total = state.searchMatches.length;
+      els.searchCount.textContent = `${state.searchCurrent + 1} / ${total}`;
+    }
+
+    function searchNext() {
+      if (!state.searchMatches.length) return;
+      state.searchCurrent = (state.searchCurrent + 1) % state.searchMatches.length;
+      highlightCurrent();
+    }
+
+    function searchPrev() {
+      if (!state.searchMatches.length) return;
+      state.searchCurrent = (state.searchCurrent - 1 + state.searchMatches.length) % state.searchMatches.length;
+      highlightCurrent();
+    }
+
+    function getCurrentJson() {
+      if (state.activeTab === 'quick') syncQuickToJson();
+      return els.jsonText.value.trim();
+    }
+
+    function downloadSave() {
+      try {
+        const obj = JSON.parse(getCurrentJson());
+        const encoded = tryEncode(obj);
+        const blob = new Blob([encoded], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = state.originalFilename || 'edited.save';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+        setStatus(els.downloadStatus, 'ok', '✓ Saved! Replace your old save file with this one.');
+      } catch (e) {
+        setStatus(els.downloadStatus, 'err', '✗ JSON error: ' + e.message);
+      }
+    }
+
+    async function copySaveString() {
+      try {
+        const obj = JSON.parse(getCurrentJson());
+        const encoded = tryEncode(obj);
+        await navigator.clipboard.writeText(encoded);
+        setStatus(els.downloadStatus, 'ok', '✓ Copied compressed save string to clipboard.');
+      } catch (e) {
+        setStatus(els.downloadStatus, 'err', '✗ ' + e.message);
+      }
+    }
+
+    function toggleDarkMode() {
+      state.dark = !state.dark;
+      els.body.classList.toggle('dark', state.dark);
+      els.darkToggle.textContent = state.dark ? '☀ Light Mode' : '🌙 Dark Mode';
+    }
+
+    els.darkToggle.addEventListener('click', toggleDarkMode);
+    els.tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+
+    els.dropzone.addEventListener('click', () => els.fileInput.click());
+    els.dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      els.dropzone.classList.add('dragover');
+    });
+    els.dropzone.addEventListener('dragleave', () => els.dropzone.classList.remove('dragover'));
+    els.dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      els.dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => loadRaw(String(reader.result || ''), file.name);
+      reader.readAsText(file);
+    });
+
+    els.fileInput.addEventListener('change', e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => loadRaw(String(reader.result || ''), file.name);
+      reader.readAsText(file);
+    });
+
+    els.pasteLoadBtn.addEventListener('click', () => {
+      const raw = els.pasteInput.value.trim();
+      if (raw) loadRaw(raw, 'pasted.save');
+    });
+
+    els.jsonText.addEventListener('input', () => {
+      pushUndoSnapshot();
+      updateLineNumbers();
+      searchJson();
+    });
+    els.jsonText.addEventListener('scroll', syncScroll);
+    els.jsonText.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undoJson();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redoJson();
+      }
+    });
+
+    els.formatBtn.addEventListener('click', formatJson);
+    els.validateBtn.addEventListener('click', validateJson);
+    els.undoBtn.addEventListener('click', undoJson);
+    els.redoBtn.addEventListener('click', redoJson);
+    els.resetBtn.addEventListener('click', resetJson);
+    els.searchInput.addEventListener('input', searchJson);
+    els.nextSearchBtn.addEventListener('click', searchNext);
+    els.prevSearchBtn.addEventListener('click', searchPrev);
+    els.downloadBtn.addEventListener('click', downloadSave);
+    els.copyBtn.addEventListener('click', copySaveString);
+
+    updateLineNumbers();
+  </script>
+</body>
+</html>
