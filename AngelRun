@@ -1,1 +1,844 @@
-ddd
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Challenge Randomizer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #1f1118;
+    --surface2: #301824;
+    --border: #2e2850;
+    --accent: #ff6eb4;
+    --accent2: #f06090;
+    --accent3: #6ef0d0;
+    --text: #fff0f7;
+    --text-dim: #c490aa;
+    --gold: #e0b060;
+    --gold2: #f8d888;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', serif;
+    font-size: 17px;
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(176,110,243,0.13) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 30% at 80% 100%, rgba(240,96,144,0.08) 0%, transparent 70%);
+  }
+
+  header {
+    text-align: center;
+    padding: 2.5rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(176,110,243,0.08) 0%, transparent 100%);
+  }
+  header h1 {
+    font-family: 'Pacifico', serif;
+    font-size: clamp(1.4rem, 4vw, 2.5rem);
+    color: var(--gold2);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 30px rgba(224,176,96,0.4);
+    margin-bottom: 0.4rem;
+  }
+    .hero-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.7rem; line-height: 1.8;
+      background: linear-gradient(130deg, #ff9ed2 0%, #ffffff 45%, #ff6eb4 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 28px rgba(255,110,180,0.35));
+    }
+
+  header p { color: var(--text-dim); font-style: italic; font-size: 1rem; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+  .mode-bar { display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .mode-btn {
+    font-family: 'Pacifico', serif;
+    font-size: 0.8rem; padding: 0.55rem 1.5rem;
+    border-radius: 40px; border: 2px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.25s; letter-spacing: 0.05em;
+  }
+  .mode-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(176,110,243,0.1); box-shadow: 0 0 16px rgba(176,110,243,0.25); }
+  .mode-btn.hard.active { border-color: var(--accent2); color: var(--accent2); background: rgba(240,96,144,0.1); box-shadow: 0 0 16px rgba(240,96,144,0.25); }
+  .mode-btn.xhard.active { border-color: #ff3060; color: #ff3060; background: rgba(255,48,96,0.13); box-shadow: 0 0 16px rgba(255,48,96,0.32); }
+
+  .hard-note { text-align: center; font-size: 0.83rem; color: var(--accent2); font-style: italic; margin-bottom: 1rem; display: none; }
+  .hard-note.visible { display: block; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1.2rem; overflow: hidden; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.8rem 1.1rem; background: var(--surface2);
+    cursor: pointer; border-bottom: 1px solid var(--border); user-select: none;
+  }
+  .section-header h3 { font-family: 'Pacifico', serif; font-size: 0.75rem; color: var(--gold); letter-spacing: 0.06em; }
+  .chevron { color: var(--text-dim); font-size: 0.9rem; transition: transform 0.2s; }
+  .section.open .chevron { transform: rotate(180deg); }
+  .section-body { display: none; padding: 1rem 1.1rem; }
+  .section.open .section-body { display: block; }
+
+  .sex-toggle { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .sex-btn { font-size: 0.82rem; padding: 0.3rem 0.9rem; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.2s; }
+  .sex-btn.active { border-color: var(--accent3); color: var(--accent3); background: rgba(110,240,208,0.08); }
+
+  .feat-cat-tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  .feat-cat-btn {
+    font-size: 0.78rem; padding: 0.3rem 0.85rem;
+    border-radius: 4px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .feat-cat-btn.viewing { border-color: var(--accent); color: var(--accent); background: rgba(176,110,243,0.08); }
+  .feat-cat-btn.disabled-cat { opacity: 0.45; text-decoration: line-through; }
+
+  .feat-panel { display: none; }
+  .feat-panel.visible { display: block; }
+
+  .feat-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.6rem; gap: 1rem; flex-wrap: wrap;
+  }
+  .feat-panel-info { font-size: 0.79rem; color: var(--text-dim); font-style: italic; }
+  .feat-panel-info span { color: var(--gold); font-style: normal; }
+
+  .feat-toggle-cat-btn {
+    font-size: 0.72rem; padding: 0.2rem 0.7rem;
+    border-radius: 3px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .feat-toggle-cat-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0.35rem;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 0.3rem;
+  }
+  .feat-grid::-webkit-scrollbar { width: 4px; }
+  .feat-grid::-webkit-scrollbar-track { background: transparent; }
+  .feat-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .feat-item {
+    display: flex; align-items: flex-start; gap: 0.45rem;
+    padding: 0.38rem 0.5rem; border-radius: 5px;
+    border: 1px solid transparent; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .feat-item:hover { border-color: var(--border); background: rgba(255,255,255,0.03); }
+  .feat-item.pinned { border-color: var(--gold); background: rgba(224,176,96,0.06); }
+
+  .feat-check {
+    width: 13px; height: 13px; border: 1.5px solid var(--border);
+    border-radius: 3px; flex-shrink: 0; margin-top: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; color: var(--gold);
+  }
+  .feat-item.pinned .feat-check { border-color: var(--gold); }
+
+  .feat-name { font-size: 0.82rem; color: var(--text); line-height: 1.3; }
+  .feat-desc { font-size: 0.74rem; color: var(--text-dim); font-style: italic; line-height: 1.3; margin-top: 0.1rem; }
+  .feat-link { color: var(--accent); text-decoration: none; }
+  .feat-link:hover { text-decoration: underline; }
+
+  .actions { display: flex; gap: 0.8rem; justify-content: center; margin: 1.8rem 0 1rem; flex-wrap: wrap; }
+  .btn-roll {
+    font-family: 'Pacifico', serif; font-size: 0.9rem;
+    padding: 0.75rem 2.5rem; border-radius: 40px;
+    border: 2px solid var(--accent);
+    background: linear-gradient(135deg, rgba(176,110,243,0.2), rgba(240,96,144,0.1));
+    color: var(--accent); cursor: pointer; transition: all 0.25s;
+    letter-spacing: 0.05em; box-shadow: 0 0 20px rgba(176,110,243,0.2);
+  }
+  .btn-roll:hover { background: linear-gradient(135deg, rgba(176,110,243,0.35), rgba(240,96,144,0.2)); box-shadow: 0 0 35px rgba(176,110,243,0.35); transform: translateY(-1px); }
+  .btn-roll.hard { border-color: var(--accent2); color: var(--accent2); background: linear-gradient(135deg, rgba(240,96,144,0.2), rgba(176,110,243,0.1)); box-shadow: 0 0 20px rgba(240,96,144,0.2); }
+  .btn-roll.hard:hover { box-shadow: 0 0 35px rgba(240,96,144,0.35); }
+  .btn-roll.xhard { border-color: #ff3060; color: #ff3060; background: linear-gradient(135deg, rgba(255,48,96,0.22), rgba(176,110,243,0.1)); box-shadow: 0 0 20px rgba(255,48,96,0.25); }
+  .btn-roll.xhard:hover { box-shadow: 0 0 35px rgba(255,48,96,0.42); }
+
+  #output { display: none; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius); padding: 1.5rem 1.8rem; margin-top: 1rem; box-shadow: 0 0 40px rgba(176,110,243,0.12); }
+  #output.hard-result { border-color: var(--accent2); box-shadow: 0 0 40px rgba(240,96,144,0.12); }
+  #output.xhard-result { border-color: #ff3060; box-shadow: 0 0 40px rgba(255,48,96,0.18); }
+  #output h2 { font-family: 'Pacifico', serif; font-size: 0.85rem; color: var(--gold2); letter-spacing: 0.08em; margin-bottom: 1rem; text-align: center; }
+  #output-text { font-size: 1rem; line-height: 1.9; color: var(--text); }
+  .result-block { margin-bottom: 0.9rem; }
+  .result-block strong { color: var(--gold2); }
+  .feat-cat-label { color: var(--gold); font-size: 0.85em; font-style: italic; display: block; margin-top: 0.5rem; margin-bottom: 0.1rem; }
+  
+  .save-btns {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .copy-btn {
+    font-family: 'Nunito', serif; font-size: 0.85rem;
+    padding: 0.4rem 1.2rem; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .copy-btn.feats-only { border-color: var(--border); }
+  .copy-btn.feats-only:hover { border-color: var(--gold); color: var(--gold); }
+
+  .hint { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.7rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="hero-title">DoL Challenge Randomizer</h1>
+  <p>no good very bad run generator</p>
+</header>
+
+<div class="container">
+
+  <div class="mode-bar">
+    <button class="mode-btn active" id="btn-normal" onclick="setMode('normal')">Normal Roll</button>
+    <button class="mode-btn hard" id="btn-hard" onclick="setMode('hard')">Hard Mode</button>
+    <button class="mode-btn xhard" id="btn-xhard" onclick="setMode('xhard')">Extra Hard</button>
+  </div>
+  <div class="hard-note" id="hard-note-hard">Hard Mode: Love Interest locked to include <strong>Gwylan</strong></div>
+  <div class="hard-note" id="hard-note-xhard">Extra Hard Mode: Love Interest locked to include <strong>Gwylan</strong> · Divine Transformation locked to <strong>Angel</strong></div>
+
+  <!-- SEX -->
+  <div class="section open">
+    <div class="section-header" onclick="toggleSection(this)">
+      <h3>⚧ Character Sex</h3>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="sex-toggle">
+        <button class="sex-btn active" id="sex-f" onclick="setSex('female')">Female</button>
+        <button class="sex-btn" id="sex-m" onclick="setSex('male')">Male</button>
+        <button class="sex-btn" id="sex-h" onclick="setSex('hermaphrodite')">Hermaphrodite</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="actions">
+    <button class="btn-roll" id="roll-btn" onclick="doRoll()">✦ Roll the Dice ✦</button>
+  </div>
+
+  <div id="output">
+    <!-- Challenge text WITHOUT feats -->
+    <div id="output-challenge"></div>
+    <!-- Feats section separately -->
+    <div id="output-feats"></div>
+
+    <div class="save-btns">
+      <button class="copy-btn" onclick="saveChallenge()">Save Challenge & Feats</button>
+      <button class="copy-btn" onclick="saveChallengeNoFeats()">Save Challenge</button>
+      <button class="copy-btn feats-only" onclick="saveFeatsOnly()">Save Feats</button>
+    </div>
+  </div>
+
+</div>
+<!-- html2canvas for screenshots -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const DATA = {
+  bodySize:        ["Miniature","Tiny","Small","Normal","Tall","Large","Giant"],
+  body:            ["Classic","Slender","Curvy","Soft"],
+  penisSize:       ["Micro","Mini","Tiny","Small","Normal","Large","Enormous"],
+  breastSize:      ["Flat","Budding","Tiny","Small","Pert","Modest","Full"],
+  assSize:         ["Slender","Slim","Modest","Cushioned","Soft","Round","Plump","Large","Huge"],
+  eyeColour:       ["Purple","Dark Blue","Light Blue","Amber","Hazel","Green","Lime Green","Red","Pink","Grey","Light Grey"],
+  hairColour:      ["Red","Jet Black","Black","Brown","Soft Brown","Light Brown","Burnt Orange","Strawberry Blond","Ginger","Blond","Soft Blonde","Platinum Blond","Ashy Blond","Blood Orange","Blue","Deep Blue","Neon Blue","Green","Dark Lime","Toxic Green","Teal","Pink","Bright Pink","Hot Pink","Soft Pink","Crimson","Purple","Medium Purple","White","Snow White"],
+  hairLength:      ["Ear","Neck","Chest","Navel","Thighs","Feet"],
+  awareness:       ["Innocent","Knowledgeable"],
+  background:      ["Nerd","Athlete","Delinquent","Promiscuous","Exhibitionist","Deviant","Beautiful","Lustful","Dendrophile"],
+  gameMode:        ["Normal","Soft","Hard"],
+  loveInterests:   ["Robin","Whitney","Eden","Kylar","Avery","Black Wolf","Great Hawk","Sydney","Gwylan","Alex"],
+  virginity:       ["Robin","Whitney","Kylar","Eden","Avery","Leighton","Alex","Great Hawk","Wren","Black Wolf","Sydney","Harper","Morgan","Gwylan"],
+  animalTransform: ["Cat","Cow","Harpy","Fox","Bunny"],
+  divineTransform: ["Angel","Succubus","Fallen Angel","None"],
+  skills:          ["Skulduggery","Dancing","Swimming","Athletics","Tending","Housekeeping","Brawling","Footwork","Striking"],
+  fame:            ["Combat","Kindness","Business","Social","Modelling"],
+  sexualFame:      ["Sex","Prostitution","Rape","Beast","Exhibitionism","Pregnancy"],
+  money:           ["£10,000","£100,000","£1,000,000"],
+  school:          ["1 distinction","5 distinctions","15 distinctions"],
+  socialSchool:    ["Social Butterfly"],
+  socialTeacher:   ["Teacher's Pet","Teacher's Nightmare"],
+  recipe:          ["5 recipes","20 recipes","50 recipes"],
+  merchant:        ["100","1000","5000"],
+  bdsm:            ["Submissiveness","Masochism","Submissiveness and Masochism"],
+  homecook:        ["Robin","Whitney","Kylar","Eden","Avery","Alex","Great Hawk","Black Wolf","Sydney","Gwylan"],
+  robincrossdress: ["encouraging Robin to crossdress","discouraging Robin from crossdressing"],
+  firstkiss:       ["At the very least your first kiss can be with <strong>anyone</strong>","Your first kiss also has to be with a <strong>love interest</strong>"],
+  sydney:          ["corrupting Sydney","keeping Sydney innocent"],
+  sexTrait:        ["Orgasm Addict","Cum Dump","Plaything","Fucktoy","Bitch","Prey","Tasty","Milk Addict","Asphyxiophilia"],
+  parasite: [
+    "become a host to a hermaphrodite parasite",
+    "give anal birth to a parasite with perfect activity",
+    "birth all possible parasitic creatures",
+    "avoid birthing any parasites"
+  ],
+  birthMale:   ["and impregnate at least one person","and give birth as a male"],
+  birthFemale: [
+    "and give birth at least once",
+    "and have risky sex with at least 5 different people before learning you're pregnant",
+    "and give birth to triplets",
+    "and give birth at least three times"
+  ],
+  badEnding: ["Asylum","Underground Farm","Underground Brothel","Prison","Dog Pound","Mines","Island","Pirate Ship"],
+};
+
+const FEAT_CATS = {
+  "General": [
+    { name: "It Belongs in a Museum!", desc: "Find all the artifacts.", link: "" },
+    { name: "Fully Covered",            desc: "Must be covered head-to-toe in slime, semen, and nectar in any combination, in addition to having every hole completely filled.", link: "" },
+    { name: "Stressful Challenge",      desc: "Get to day 50 without passing out.", link: "" },
+    { name: "Long Stressful Challenge", desc: "Get to day 150 without passing out.", link: "" },
+    { name: "Billboard",                desc: "An NPC must read an advertisement written on the player's body and drop any given amount of money on top them.", link: "" },
+    { name: "A Living Canvas",          desc: "Ink on every part.", link: "" },
+    { name: "Farmhand",                 desc: "Help Alex expand the farm.", link: "" },
+    { name: "Farmer",                   desc: "Return the farm to its former glory.", link: "" },
+    { name: "Cultivator",               desc: "Claim every field at Alex's farm.", link: "" },
+    { name: "The Rival Farm",           desc: "Build a farm expansion.", link: "" },
+    { name: "The Rival Estate",         desc: "Build all the farm expansions.", link: "" },
+    { name: "Heroic Victory",           desc: "Defend nine fields from Remy, lose none.", link: "" },
+    { name: "Five in a Row",            desc: "Win five games of blackjack in a row.", link: "" },
+    { name: "Science Fair Winner",      desc: "Win the Science Fair.", link: "" },
+    { name: "Maths Competition Winner", desc: "Win the Maths Competition.", link: "" },
+    { name: "Rich Hearts",              desc: "Perform well during the stage play.", link: "" },
+  ],
+  "Stats": [
+    { name: "Most Aware",         desc: "Reach a high level of Awareness.", link: "" },
+    { name: "Most Innocent",      desc: "Reach maximum Innocence.", link: "" },
+    { name: "No More Control",    desc: "Reach the maximum amount of Promiscuity, Exhibitionism, and Deviancy.", link: "" },
+    { name: "Seductress",         desc: "Reach maximum Seduction.", link: "" },
+    { name: "Alluring",           desc: "Reach high Allure.", link: "" },
+    { name: "Sex Specialist",     desc: "Perfect each Sexual Skill.", link: "" },
+    { name: "Perfect Record",     desc: "Master all school subjects.", link: "" },
+    { name: "Shining Reputation", desc: "All negative fames (Sex, Prostitution, Rape, Bestiality/Monsterpeople, Exhibitionism, Pregnancy) must be below 30 fame and all positive fames (Combat, Kindness, Business, Sociallite, Model) must be above 1000 fame.", link: "" },
+  ],
+  "Social": [
+    { name: "Delinquent Antics",  desc: "Make Whitney cum during class.", link: "" },
+    { name: "Giddy Up",           desc: "Throw Whitney into a pool.", link: "" },
+    { name: "Kept",               desc: "Gain access to Avery's Mansion.", link: "" },
+    { name: "What Goes Around",   desc: "Turn the tables on a wealthy patron.", link: "" },
+    { name: "Most Exclusive",     desc: "Go on a Valentine's date with a wealthy patron.", link: "" },
+    { name: "Pride Cometh",       desc: "Help a wealthy patron.", link: "" },
+    { name: "Feather Trick",      desc: "Catch three lurkers in a single dive while hunting with the Great Hawk.", link: "" },
+    { name: "Ballroom Show-off",  desc: "Win a competition with Avery.", link: "" },
+    { name: "Under the Table",    desc: "Proved your mettle in a drinking contest.", link: "" },
+    { name: "Pub Crawl Victors",  desc: "Won a competition with your work colleagues.", link: "" },
+    { name: "Mason's Secret",     desc: "Convince Mason to share something they'd rather not.", link: "" },
+    { name: "Mason's Shame",      desc: "Bring Mason to orgasm inside a locker.", link: "" },
+    { name: "Animal Tender",      desc: "Earn the respect of all animals at Alex's farm.", link: "" },
+    { name: "I Spy",              desc: "Peek on Alex in the shower.", link: "" },
+    { name: "A Crime Most Foul",  desc: "Make a written punishment permanent.", link: "" },
+    { name: "Longing",            desc: "Drive Kylar to restrained madness.", link: "" },
+    { name: "Pagan Rite",         desc: "Discover the secret of Kylar's manor.", link: "" },
+    { name: "Warmest Winter",     desc: "Help an old fossil remember.", link: "" },
+    { name: "Trials of Faith",    desc: "Hear all endings of the 'Hopeless Cycle' story.", link: "" },
+    { name: "First Verse",        desc: "Learn a shopkeeper's secrets, and join in.", link: "" },
+    { name: "Wildsong",           desc: "Delve deeper into Gwylan's secrets.", link: "" },
+    { name: "Foxbane",            desc: "Have a friend help you escape a hunter.", link: "" },
+  ],
+  "Discovery": [
+    { name: "Head Chef",                 desc: "Baking for others.", link: "" },
+    { name: "Laughingstock",             desc: "Frame someone and get them sent to the pillory.", link: "" },
+    { name: "You're the Laughingstock",  desc: "Get sent to the pillory, either willingly or unwillingly.", link: "" },
+    { name: "Illicit Science",           desc: "Discover and infiltrate the Elk Street Compound.", link: "" },
+    { name: "Mouth Sealed Shut",         desc: "Get caught and survive the torture interrogation within the Elk Street Compound.", link: "" },
+    { name: "Neck Deep",                 desc: "Make it through an event with a van in the industrial alleyways in a barrel without being discovered.", link: "" },
+    { name: "Seedy",                     desc: "Discover half of available seeds.", link: "" },
+    { name: "Breedy",                    desc: "Discover all existing seeds", link: "" },
+    { name: "A Thunderous Response",     desc: "Trigger a gangbang when the cream covering your body runs out.", link: "" },
+    { name: "A Lewd Adventure",          desc: "Go from one side of the town to the other, while under the threat of feeling exposed.", link: "" },
+    { name: "Sour Dealing",              desc: "Get rescued by Bailey after triggering the Stimulant Kidnapping sequence.", link: "https://degreesoflewdity.miraheze.org/wiki/Stimulant_Kidnapping" },
+    { name: "Pain Rider",                desc: "Complete Winter's BDSM torture horse demonstration without stopping.", link: "" },
+    { name: "Submerged",                 desc: "Complete Winter's second BDSM torture demonstration without stopping.", link: "" },
+    { name: "Wrong Size",                desc: "Use Skulduggery to swap the boy's and girl's clothing with the opposite sex changing rooms next to the pool.", link: "" },
+    { name: "Idle Hands",                desc: "Use Skulduggery to steal from a client while working at the Danube Street spa.", link: "" },
+    { name: "Stolen Technology",         desc: "Use gel to successfully repair the machine for Briar.", link: "" },
+    { name: "Spelunking",                desc: "Discover and enter the Smuggler's Cave.", link: "" },
+    { name: "X Marks the Spot",          desc: "Reach the end of the Smuggler's Cave.", link: "" },
+    { name: "Buried Treasure",           desc: "Find a buried treasure in a courtyard of a ruined castle.", link: "" },
+    { name: "Flurry",                    desc: "Win a snowball fight with a group throwing snowballs at Robin's hot chocolate stand.", link: "" },
+    { name: "A Festive Home",            desc: "Purchase clothing gifts for fellow orphans.", link: "" },
+    { name: "Employee Benefits",         desc: "Find gold when searching through the Docks at night.", link: "" },
+    { name: "Dealing",                   desc: "Sell a vial of aphrodisiac to the Elk Street Compound.", link: "" },
+    { name: "Bent Copper",               desc: "Catch an officer making a shady deal while performing community service.", link: "" },
+    { name: "Social Contract",           desc: "Finish a full sentence of community service.", link: "" },
+    { name: "Slip Through the Backdoor", desc: "Complete Mickey's task on Bailey and then defeat the thugs Bailey sends after you in retaliation.", link: "" },
+    { name: "Life of the Party",         desc: "Reach max audience interest (\"The audience seem enthralled.\") during Charlie's Domus Street party job.", link: "" },
+    { name: "Belle of the Ball",         desc: "Reach max audience interest (\"The audience seem enthralled.\") during Charlie's Dance Street manor job.", link: "" },
+    { name: "Breaking the Stone",        desc: "Uncover a ritual while exploring the manor, then choose to interrupt it.", link: "" },
+    { name: "Pound Alpha",               desc: "Reach maximum Pound Respect (\"The dogs see you as alpha\") during the Dog Pound Soft Bad End", link: "" },
+    { name: "Pound Runt",                desc: "Reach minimum Pound Respect (\"The dogs see you as a runt\") during the Dog Pound Soft Bad End", link: "" },
+    { name: "Pounded Pound",             desc: "Be rescued by Bailey or escape via Investigation during the Dog Pound Soft Bad End then talk to Bailey", link: "" },
+    { name: "Pound Liberator",           desc: "Complete the Dog Pound questline and free the Black Dog", link: "" },
+    { name: "The Value of Pain",         desc: "Intervene in an orphan's treatment while going through windows as a Demon at night on Domus Street", link: "" },
+    { name: "Bewitching Echoes",         desc: "Rile up the audience during the bukkake show so that that they overcome security and rush onto the stage to ravage you.", link: "" },
+    { name: "Bridging the Past",         desc: "Build a bridge over the canal.", link: "" },
+    { name: "Safe Trail",                desc: "Restore the road through the forest.", link: "" },
+    { name: "Field Work",                desc: "Build an archeological field office at the lake.", link: "" },
+    { name: "Concrete Woodland",         desc: "Restore the residential thicket.", link: "" },
+    { name: "School Green",              desc: "Restore the school green.", link: "" },
+    { name: "Hookah Master",             desc: "Inherite the hookah parlour.", link: "" },
+    { name: "Sins of the Past",          desc: "Discover the mayor's secret.", link: "" },
+    { name: "Panic Room",                desc: "Escape a security system in the flats.", link: "" },
+    { name: "Defy the Night",            desc: "Endure the Trial of Anguish to completion.", link: "" },
+    { name: "Withering Truth",           desc: "Completely purge a corrupted penitent in confessional.", link: "" },
+    { name: "Max Those Shots",           desc: "Reach the maximum pepper spray capacity by collecting all eight pepper spray canisters.", link: "" },
+    { name: "Opened Pandora's Box",      desc: "Help with opening the Adult Shop.", link: "" },
+    { name: "Opened Pandora's Cocks",    desc: "Help at least 11 times at the Adult Shop before it opens.", link: "" },
+    { name: "Brothel Provider",          desc: "Complete the Brothel's vending machine questline.", link: "" },
+    { name: "Player of the Match",       desc: "Steal the signed cricket ball from Wren.", link: "" },
+  ],
+  "Outside Town": [
+    { name: "Locked in Gold",          desc: "Find, obtain and then equip the golden chastity belt from the Forest Lake Ruins.", link: "" },
+    { name: "The Endless Deep",         desc: "Swim out to sea as far as you possibly can from the Beach, until you cannot swim any further.", link: "" },
+    { name: "Wet and Ruined",           desc: "Find a half-sunken, ruined castle deep in the Moor.", link: "" },
+    { name: "Terror's Equal",           desc: "Take your place as an equal to the Great Hawk by building the final level of decoration at the tower.", link: "" },
+    { name: "Birds of a Feather...",    desc: "Find and adopt a baby bird while hunting with the Great Hawk.", link: "" },
+    { name: "Runaway Cattle",           desc: "Successfully escape the Underground Farm.", link: "" },
+    { name: "Equine Rescue",            desc: "Be rescued after being sexually assaulted at the Underground Farm.", link: "" },
+    { name: "Rear Passenger",           desc: "Sit between the two hitchhikers in the car, then the you must choose to intentionally rub your ass against the gear stick.", link: "" },
+    { name: "Cornered Rogue",           desc: "Successfully manage to catch the clothes-thief fox.", link: "" },
+    { name: "Farm Protector",           desc: "Defended the farm from a rival's thugs.", link: "" },
+    { name: "A Knot to Remember",       desc: "Have a beast or monster orgasm inside you while at the farm.", link: "" },
+    { name: "Abnormal Mollusc",         desc: "Escape the giant slug after being taken to them.", link: "" },
+    { name: "Leverage",                 desc: "Get captured by the smugglers, and escape unharmed.", link: "" },
+    { name: "Under the Ice",            desc: "Break through the ice trapping you underwater after diving in the forest lake.", link: "" },
+    { name: "In Red Light",             desc: "Gather blood lemons in the Forest during a blood moon.", link: "" },
+    { name: "Oh Bother",                desc: "Gather honeycomb from the bee nests within the Forest.", link: "" },
+    { name: "Not Like the Movies",      desc: "Pass the willpower check five separate times when trapped in the quicksand at the Moor.", link: "" },
+    { name: "Slippery",                 desc: "Escape from Remy's goons after being captured by them in the Moor before they can bring you back to the Underground Farm.", link: "" },
+    { name: "High Reflection",          desc: "Find the mirror at the base of the ruined tower and bring it up to the top.", link: "" },
+    { name: "Schism",                   desc: "Relive the tragic past of the Ivory Wraith and learn why it's not noble to steal from the dead.", link: "" },
+    { name: "Catch the Wind",           desc: "Have the Great Hawk teach you how to fly.", link: "" },
+    { name: "Trading Dignity",          desc: "End Blackjack with your chest/penis/vagina exposed.", link: "" },
+    { name: "Playing with Fire",        desc: "Make Wren cum before you while playing Blackjack.", link: "" },
+    { name: "Firestarter",              desc: "Increase the daring stat to 11 by winning at Blackjack against Wren, then request them to start a fire.", link: "" },
+    { name: "To Watch the Fields",      desc: "Build the watchtower and hire a guard.", link: "" },
+    { name: "Reliable Employer",        desc: "Have your watchtower guard's Security skill reach S.", link: "" },
+    { name: "Into the Sunset",          desc: "Successfully outmaneuver Remy's goons whilst riding in the countryside.", link: "" },
+    { name: "Institutionalized",        desc: "Get properly released from prison.", link: "" },
+    { name: "Breaker",                  desc: "Sabotage the experimental shock generator.", link: "" },
+    { name: "Time and Pressure",        desc: "Dig a hole to the beach inside the player's cell.", link: "" },
+    { name: "More than a Number",       desc: "Learn the names of all the Prison Guards and the inmates.", link: "" },
+    { name: "Friends in the Sky",       desc: "Return the watcher's lost egg.", link: "" },
+    { name: "Not Meant to be Caged",    desc: "Escape prison.", link: "" },
+    { name: "Free Booze",               desc: "Drink all of the youths' booze and refuse the final request made.", link: "" },
+    { name: "Dark Delvings",            desc: "Find the White Crystal antique in the Catacombs under the forest.", link: "" },
+    { name: "Lurker Beyond",            desc: "Orgasm in the tentacle forest.", link: "" },
+    { name: "Down Below",               desc: "Escape the Mines.", link: "" },
+    { name: "Lost World",               desc: "Wash up on the Island.", link: "" },
+    { name: "Prehistoric Landscape",    desc: "Discover all explorable areas of the Island.", link: "" },
+    { name: "Face of a Guardian",       desc: "Sculpt an islander mask.", link: "" },
+    { name: "Wild Monarch",             desc: "Upgrade seating to a throne at any base on the Island.", link: "" },
+    { name: "Naturalised",              desc: "Sculpt an islander mask and increase comprehension to infiltrate the Island castle.", link: "" },
+    { name: "Gilded Spear",             desc: "Complete the Island storyline.", link: "" },
+    { name: "Lost Heirloom",            desc: "Receive the gold compass from Zephyr as a reward.", link: "" },
+  ],
+};
+
+let currentMode = 'normal';
+let sexType = 'female';
+
+const catEnabled = {};
+Object.keys(FEAT_CATS).forEach(c => catEnabled[c] = true);
+
+const pinnedFeats = {};
+Object.keys(FEAT_CATS).forEach(c => pinnedFeats[c] = new Set());
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function pickN(arr, n) {
+  const copy = [...arr];
+  const out = [];
+  n = Math.min(n, copy.length);
+  for (let i = 0; i < n; i++) {
+    const idx = Math.floor(Math.random() * copy.length);
+    out.push(copy.splice(idx, 1)[0]);
+  }
+  return out;
+}
+
+function shuffleArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function toggleSection(headerEl) {
+  const section = headerEl.parentElement;
+  section.classList.toggle('open');
+}
+
+function setSex(s) {
+  sexType = s;
+  document.getElementById('sex-f').classList.toggle('active', s === 'female');
+  document.getElementById('sex-m').classList.toggle('active', s === 'male');
+  document.getElementById('sex-h').classList.toggle('active', s === 'hermaphrodite');
+}
+
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('btn-normal').classList.toggle('active', m === 'normal');
+  document.getElementById('btn-hard').classList.toggle('active', m === 'hard');
+  document.getElementById('btn-xhard').classList.toggle('active', m === 'xhard');
+
+  const btn = document.getElementById('roll-btn');
+  btn.classList.remove('hard', 'xhard');
+  if (m === 'hard')  btn.classList.add('hard');
+  if (m === 'xhard') btn.classList.add('xhard');
+
+  if (m === 'normal') btn.textContent = '✦ Roll the Dice ✦';
+  if (m === 'hard')   btn.textContent = '⚔ Hard Mode Roll ⚔';
+  if (m === 'xhard')  btn.textContent = '💀 Extra Hard Roll 💀';
+
+  document.getElementById('hard-note-hard').classList.toggle('visible', m === 'hard');
+  document.getElementById('hard-note-xhard').classList.toggle('visible', m === 'xhard');
+}
+
+function buildFeatUI() {
+  const tabsEl   = document.getElementById('feat-cat-tabs');
+  const panelsEl = document.getElementById('feat-panels');
+  const cats     = Object.keys(FEAT_CATS);
+
+  cats.forEach((cat, ci) => {
+    const tab = document.createElement('button');
+    tab.className = 'feat-cat-btn' + (ci === 0 ? ' viewing' : '');
+    tab.id = 'tab-' + ci;
+    tab.textContent = cat;
+    tab.onclick = () => showPanel(ci, cats);
+    tabsEl.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = 'feat-panel' + (ci === 0 ? ' visible' : '');
+    panel.id = 'panel-' + ci;
+
+    const hdr = document.createElement('div');
+    hdr.className = 'feat-panel-header';
+
+    const info = document.createElement('div');
+    info.className = 'feat-panel-info';
+    info.id = 'cat-info-' + ci;
+    info.innerHTML = catEnabled[cat]
+      ? `4 feats will be drawn — <span id="pin-count-${ci}">0</span> pinned`
+      : `<em>Disabled — no feats drawn</em>`;
+    hdr.appendChild(info);
+
+    const disableBtn = document.createElement('button');
+    disableBtn.className = 'feat-toggle-cat-btn';
+    disableBtn.id = 'disable-btn-' + ci;
+    disableBtn.textContent = catEnabled[cat] ? 'Disable Category' : 'Enable Category';
+    disableBtn.onclick = () => toggleCat(ci, cat, cats);
+    hdr.appendChild(disableBtn);
+
+    panel.appendChild(hdr);
+
+    const grid = document.createElement('div');
+    grid.className = 'feat-grid';
+
+    FEAT_CATS[cat].forEach(feat => {
+      const item = document.createElement('div');
+      item.className = 'feat-item';
+      item.dataset.cat  = cat;
+      item.dataset.name = feat.name;
+      item.onclick = () => togglePin(ci, cat, feat.name);
+
+      const chk = document.createElement('div');
+      chk.className = 'feat-check';
+      chk.textContent = '✓';
+
+      const info2 = document.createElement('div');
+      info2.style.flex = '1';
+
+      const nm = document.createElement('div');
+      nm.className = 'feat-name';
+      if (feat.link) {
+        const a = document.createElement('a');
+        a.href = feat.link; a.target = '_blank';
+        a.className = 'feat-link';
+        a.textContent = feat.name;
+        a.onclick = e => e.stopPropagation();
+        nm.appendChild(a);
+      } else {
+        nm.textContent = feat.name;
+      }
+      info2.appendChild(nm);
+
+      if (feat.desc) {
+        const d = document.createElement('div');
+        d.className = 'feat-desc';
+        d.textContent = feat.desc;
+        info2.appendChild(d);
+      }
+
+      item.appendChild(chk);
+      item.appendChild(info2);
+      grid.appendChild(item);
+    });
+
+    panel.appendChild(grid);
+    panelsEl.appendChild(panel);
+  });
+}
+
+function showPanel(idx, cats) {
+  document.querySelectorAll('.feat-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.feat-cat-btn').forEach(b => b.classList.remove('viewing'));
+  document.getElementById('panel-' + idx).classList.add('visible');
+  document.getElementById('tab-' + idx).classList.add('viewing');
+}
+
+function toggleCat(idx, cat, cats) {
+  catEnabled[cat] = !catEnabled[cat];
+  const en = catEnabled[cat];
+  const pinCount = pinnedFeats[cat].size;
+  document.getElementById('cat-info-' + idx).innerHTML = en
+    ? `4 feats will be drawn — <span id="pin-count-${idx}">${pinCount}</span> pinned`
+    : `<em>Disabled — no feats drawn</em>`;
+  document.getElementById('disable-btn-' + idx).textContent = en ? 'Disable Category' : 'Enable Category';
+  document.getElementById('tab-' + idx).classList.toggle('disabled-cat', !en);
+}
+
+function togglePin(idx, cat, name) {
+  const set = pinnedFeats[cat];
+  if (set.has(name)) set.delete(name);
+  else set.add(name);
+  const pinned = set.has(name);
+
+  document.querySelectorAll(`.feat-item[data-cat="${cat}"][data-name="${CSS.escape(name)}"]`)
+    .forEach(el => el.classList.toggle('pinned', pinned));
+
+  const countEl = document.getElementById('pin-count-' + idx);
+  if (countEl) countEl.textContent = set.size;
+}
+
+function doRoll() {
+  const hard  = currentMode === 'hard';
+  const xhard = currentMode === 'xhard';
+  const anyHard = hard || xhard;
+  const sex   = sexType;
+
+  const awareness     = pick(DATA.awareness);
+  const background    = pick(DATA.background);
+  const gameMode      = pick(DATA.gameMode);
+  const bodySize      = pick(DATA.bodySize);
+  const body          = pick(DATA.body);
+  const assSize       = pick(DATA.assSize);
+  const eyeColour     = pick(DATA.eyeColour);
+  const hairColour    = pick(DATA.hairColour);
+  const hairLength    = pick(DATA.hairLength);
+
+  let organText = '';
+  if (sex === 'male') {
+    organText = `a <strong>${pick(DATA.penisSize)}</strong> cock`;
+  } else if (sex === 'female') {
+    organText = `<strong>${pick(DATA.breastSize)}</strong> breasts`;
+  } else {
+    organText = `a <strong>${pick(DATA.penisSize)}</strong> cock and <strong>${pick(DATA.breastSize)}</strong> breasts`;
+  }
+
+  const animalT  = pick(DATA.animalTransform);
+  // Extra Hard: divine locked to Angel. Hard & Normal: fully random.
+  const divineT  = xhard ? 'Angel' : pick(DATA.divineTransform);
+  const hasAnimal = animalT !== 'None';
+  const hasDivine = divineT !== 'None';
+  let transformText = '';
+
+  if (hasAnimal && hasDivine) {
+    const divineAdj = { 'Angel': 'an angelic', 'Succubus': 'a succubus', 'Fallen Angel': 'a fallen' };
+    transformText = `Your end transformation goal will be becoming <strong>${divineAdj[divineT] || divineT} ${animalT.toLowerCase()}</strong>.`;
+  } else if (hasAnimal) transformText = `Your end transformation goal will be becoming a <strong>${animalT.toLowerCase()}</strong>.`;
+  else if (hasDivine)   transformText = `Your end transformation goal will be becoming <strong>${divineT.toLowerCase()}</strong>.`;
+
+  // Hard & Extra Hard: Gwylan guaranteed in love interests
+  let loveInterests;
+  if (anyHard) {
+    const others = pickN(DATA.loveInterests.filter(x => x !== 'Gwylan'), 2);
+    loveInterests = ['Gwylan', ...others];
+  } else {
+    loveInterests = pickN(DATA.loveInterests, 3);
+  }
+
+  const virginity      = pick(DATA.virginity);
+  const firstkiss      = pick(DATA.firstkiss);
+  const homecook       = pickN(DATA.homecook, 3);
+  const robincross     = pick(DATA.robincrossdress);
+  const sydney         = pick(DATA.sydney);
+  const socialSchool   = pick(DATA.socialSchool);
+  const socialTeacher  = pick(DATA.socialTeacher);
+  const school         = pick(DATA.school);
+  const recipe         = pick(DATA.recipe);
+  const merchant       = pick(DATA.merchant);
+  const money          = pick(DATA.money);
+  const skills         = pickN(DATA.skills, 2);
+  const fame           = pick(DATA.fame);
+  const bdsm           = pick(DATA.bdsm);
+  const sexualFame     = pick(DATA.sexualFame);
+  const sexTrait       = pick(DATA.sexTrait);
+  const parasite       = pick(DATA.parasite);
+  const badEnding      = xhard ? null : pick(DATA.badEnding);
+
+  let birthText = '';
+  if (sex === 'male') {
+    birthText = pick(DATA.birthMale);
+  } else if (sex === 'female') {
+    birthText = pick(DATA.birthFemale);
+  } else {
+    birthText = pick(DATA.birthFemale) + ', ' + pick(DATA.birthMale);
+  }
+
+  const drawnByCat = {};
+  Object.keys(FEAT_CATS).forEach(cat => {
+    if (!catEnabled[cat]) return;
+    const pinned   = FEAT_CATS[cat].filter(f =>  pinnedFeats[cat].has(f.name));
+    const unpinned = FEAT_CATS[cat].filter(f => !pinnedFeats[cat].has(f.name));
+    let chosen;
+    if (pinned.length >= 4) {
+      chosen = pinned.slice(0, 4);
+    } else {
+      const needed = 4 - pinned.length;
+      chosen = [...pinned, ...pickN(unpinned, needed)];
+    }
+    drawnByCat[cat] = chosen;
+  });
+
+  const artOrAn = awareness === 'Innocent' ? 'an innocent' : 'a knowledgeable';
+
+  let challengeHtml = '';
+  challengeHtml += `<h3>${gameMode} Mode</h3>`;
+  challengeHtml += `<div class="result-block">You are playing as <strong>${artOrAn}</strong> <strong>${background.toLowerCase()}</strong> <strong>${sex}</strong> with a <strong>${body.toLowerCase()}</strong> and <strong>${bodySize.toLowerCase()}</strong> body. `;
+  challengeHtml += `You will have ${organText.toLowerCase()}, a <strong>${assSize.toLowerCase()}</strong> ass, <strong>${hairLength.toLowerCase()}-length</strong> <strong>${hairColour.toLowerCase()}</strong> hair, and <strong>${eyeColour.toLowerCase()}</strong> eyes. `;
+  if (transformText) challengeHtml += transformText;
+  challengeHtml += `</div>`;
+  challengeHtml += `<div class="result-block">Your love interests are <strong>${loveInterests[0]}</strong>, <strong>${loveInterests[1]}</strong>, and <strong>${loveInterests[2]}</strong> — you may romance just <strong>${loveInterests[0]}</strong> or romance all of them, but your first time must be with <strong>${virginity}</strong>. ${firstkiss}.</div>`;
+  challengeHtml += `<div class="result-block">In terms of favourite gifts, you must find, cook and gift <strong>${homecook[0]}</strong>, <strong>${homecook[1]}</strong>, and <strong>${homecook[2]}</strong> their favourite foods. Your influence should extend to <strong>${robincross}</strong> and <strong>${sydney}</strong>.</div>`;
+  challengeHtml += `<div class="result-block">At school, aim to be a <strong>${socialSchool.toLowerCase()}</strong> and a <strong>${socialTeacher.toLowerCase()}</strong>. Outside of the social sphere, you must increase your education skills so that you can earn at least <strong>${school}</strong>. Learn at least <strong>${recipe}</strong>, sell at least <strong>${merchant}</strong> items at the Market Stall, and earn at least <strong>${money}</strong> in total.</div>`;
+  challengeHtml += `<div class="result-block">Bring your <strong>${skills[0]}</strong> and <strong>${skills[1]}</strong> skills to S tier, along with your <strong>${fame}</strong> fame. Your <strong>${bdsm}</strong> skill should be maxed, and your <strong>${sexualFame}</strong> fame maxed out. Your main goal trait wise is to gain the <strong>${sexTrait}</strong> trait.</div>`;
+  challengeHtml += `<div class="result-block">In terms of offspring, you must <strong>${parasite}</strong> <strong>${birthText}</strong>.</div>`;
+  if (badEnding) {
+    challengeHtml += `<div class="result-block">You must trigger and escape the <strong>${badEnding}</strong> bad ending.</div>`;
+  }
+
+  let featsHtml = '';
+  const enabledCats = Object.keys(drawnByCat);
+  if (enabledCats.length > 0) {
+    featsHtml += `<div class="result-block"><strong>These are the feats you need to get. Click each one as you achieve it to strike it out.</strong>`;
+    featsHtml += `<table style="width:100%;border-collapse:collapse;margin-top:0.5em;" id="feats-table">`;
+    enabledCats.forEach(cat => {
+      drawnByCat[cat].forEach(f => {
+        const id = `feat-${f.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`;
+        featsHtml += `<tr id="${id}" style="border-bottom:1px solid var(--border);cursor:pointer;transition:opacity 0.2s;" onclick="this.dataset.done = this.dataset.done === '1' ? '0' : '1'; this.style.opacity = this.dataset.done === '1' ? '0.35' : '1'; this.style.textDecoration = this.dataset.done === '1' ? 'line-through' : 'none';">
+          <td style="font-weight:bold;padding:4px 12px 4px 0;white-space:nowrap;vertical-align:middle;width:1%;color:var(--gold2);">${f.name}</td>
+          <td style="color:var(--text-dim);font-size:0.9em;font-style:italic;padding:4px 0;vertical-align:middle;">${f.desc || ''}</td>
+        </tr>`;
+      });
+    });
+    featsHtml += `</table></div>`;
+  }
+
+  document.getElementById('output-challenge').innerHTML = challengeHtml;
+  document.getElementById('output-feats').innerHTML = featsHtml;
+
+  const out = document.getElementById('output');
+  out.style.display = 'block';
+  out.classList.remove('hard-result', 'xhard-result');
+  if (hard)  out.classList.add('hard-result');
+  if (xhard) out.classList.add('xhard-result');
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Hide buttons, screenshot a target element, re-show buttons, download
+function screenshotElement(targetEl, filename) {
+  const saveBtns = document.querySelector('.save-btns');
+  saveBtns.style.visibility = 'hidden';
+
+  html2canvas(targetEl, {
+    backgroundColor: '#13111f',
+    useCORS: true,
+    scale: 2,
+  }).then(canvas => {
+    saveBtns.style.visibility = '';
+    canvas.toBlob(blob => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+  }).catch(() => {
+    saveBtns.style.visibility = '';
+  });
+}
+
+// Save only the challenge block (no feats)
+function saveChallengeNoFeats() {
+  const featsEl = document.getElementById('output-feats');
+  const wasDisplay = featsEl.style.display;
+  featsEl.style.display = 'none';
+
+  const saveBtns = document.querySelector('.save-btns');
+  saveBtns.style.visibility = 'hidden';
+
+  html2canvas(document.getElementById('output'), {
+    backgroundColor: '#13111f',
+    useCORS: true,
+    scale: 2,
+  }).then(canvas => {
+    featsEl.style.display = wasDisplay;
+    saveBtns.style.visibility = '';
+    canvas.toBlob(blob => {
+      const link = document.createElement('a');
+      link.download = 'challenge-no-feats.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+  }).catch(() => {
+    featsEl.style.display = wasDisplay;
+    saveBtns.style.visibility = '';
+  });
+}
+
+// Save full output (challenge + feats)
+function saveChallenge() {
+  screenshotElement(document.getElementById('output'), 'challenge-screenshot.png');
+}
+
+// Save only the feats block
+function saveFeatsOnly() {
+  const featsEl = document.getElementById('output-feats');
+  if (!featsEl.innerHTML.trim()) {
+    alert('No feats have been rolled yet!');
+    return;
+  }
+  screenshotElement(featsEl, 'challenge-feats.png');
+}
+
+// ── INIT ──
+buildFeatUI();
+</script>
+</body>
+</html>
