@@ -103,12 +103,16 @@
     }
     .full-width { width: 100%; animation: fadeUp 0.7s ease 0.2s both; }
 
+    /* GENRE PICKER & CHART */
     .wheel-chart-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
       width: 100%;
       align-items: stretch;
+    }
+    @media (max-width: 600px) {
+        .wheel-chart-col { grid-template-columns: 1fr; }
     }
 
     .genre-picker-card {
@@ -119,7 +123,7 @@
       backdrop-filter: blur(12px);
       display: flex; flex-direction: column; align-items: center; gap: 14px;
     }
-    .genre-grid {
+    .genre-grid-picker {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
@@ -154,8 +158,6 @@
       color: var(--pink2);
       box-shadow: 0 0 14px rgba(255,110,180,0.25);
     }
-    .genre-tile.selected .tile-emoji { animation: popIn 0.25s ease; }
-    @keyframes popIn { 0% { transform: scale(0.7); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
     .pick-btn {
       padding: 7px 22px; font-size: 0.82rem; font-weight: 800;
@@ -165,11 +167,7 @@
       border-radius: 99px; cursor: pointer; color: var(--pink2);
       transition: all 0.2s; letter-spacing: 0.5px;
     }
-    .pick-btn:hover { background: rgba(255,110,180,0.22); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,110,180,0.2); }
-    #result-badge {
-      font-family: 'Pacifico', cursive; font-size: 0.9rem;
-      color: var(--pink2); min-height: 24px; text-align: center;
-    }
+    .pick-btn:hover { background: rgba(255,110,180,0.22); transform: translateY(-2px); }
 
     .chart-card {
       background: var(--card-bg);
@@ -180,16 +178,12 @@
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 12px;
     }
-    .chart-card canvas#genreChart {
-      width: 120px !important;
-      height: 120px !important;
-      flex-shrink: 0;
-    }
+    .chart-card canvas#genreChart { width: 110px !important; height: 110px !important; }
     .chart-legend { display: flex; flex-direction: column; gap: 6px; width: 100%; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); }
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    /* Book grid — 4 cols desktop, 3 cols mobile */
+    /* PREVIOUSLY READ GRID */
     .books-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -197,53 +191,102 @@
       width: 100%;
     }
     @media (max-width: 500px) {
-      .books-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-      }
+      .books-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
     }
-
     .book-card { transition: border-color 0.3s ease; display: flex; flex-direction: column; }
-    .book-card:hover { border-color: rgba(255,110,180,0.6); }
-    .book-cover { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid var(--card-bdr); border-radius: 16px; overflow: hidden;}
+    .book-cover { width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1px solid var(--card-bdr); border-radius: 16px; overflow: hidden; }
     .book-info {
       position: absolute; inset: 0;
-      padding: 14px 12px 14px;
-      background: linear-gradient(transparent 15%, rgba(0,0,0,0.88) 52%, #000 100%);
-      display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
+      padding: 10px;
+      background: linear-gradient(transparent 15%, rgba(0,0,0,0.9) 60%, #000 100%);
+      display: flex; flex-direction: column; justify-content: flex-end; gap: 2px;
       opacity: 0; transition: opacity 0.28s ease; pointer-events: none;
     }
     .book-card:hover .book-info { opacity: 1; }
-    .book-title  { font-size: 0.82rem; font-weight: 900; color: var(--white); line-height: 1.2; }
-    .book-author { font-size: 0.68rem; color: var(--muted); margin-bottom: 1px; }
-    .genre-tag   { font-size: 0.6rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; letter-spacing: 0.3px; display: inline-block; }
-    .book-dates  { font-size: 0.6rem; color: var(--pink3); opacity: 0.8; margin-top: 2px; }
-    .book-scores { padding: 6px 12px 8px; display: flex; flex-direction: column; gap: 3px; }
-    .avg-line    { align-items: center; gap: 6px; text-align: center; }
-    .avg-stars   { font-size: 0.82rem; color: var(--pink3); text-align: center; }
+    .book-title  { font-size: 0.75rem; font-weight: 900; color: var(--white); }
+    .book-author { font-size: 0.65rem; color: var(--muted); }
+    .genre-tag   { font-size: 0.55rem; font-weight: 800; padding: 2px 6px; border-radius: 99px; display: inline-block; width: fit-content; }
+    .avg-stars   { font-size: 0.75rem; color: var(--pink3); text-align: center; margin-top: 5px; }
+
+    /* NEW BACKLOG GRID SYSTEM */
+    .backlog-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+    }
+    @media (max-width: 500px) {
+        .backlog-grid { grid-template-columns: 1fr; }
+    }
+
+    .backlog-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bdr);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      height: fit-content;
+      transition: all 0.3s ease;
+    }
+
+    .backlog-trigger {
+      width: 100%;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--pink);
+      font-weight: 900;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .trigger-info { display: flex; align-items: center; gap: 8px; }
+    .count-bubble {
+        background: rgba(255,110,180,0.15);
+        color: var(--pink2);
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-size: 0.65rem;
+    }
+    .backlog-chevron { font-size: 0.7rem; transition: transform 0.3s; opacity: 0.5; }
+
+    .backlog-section.open .backlog-chevron { transform: rotate(180deg); }
+    .backlog-section.open { border-color: var(--pink); background: rgba(255,110,180,0.03); }
+
+    .backlog-drawer {
+      display: none;
+      padding: 0 12px 12px;
+      animation: slideDown 0.3s ease;
+    }
+    .backlog-section.open .backlog-drawer { display: block; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    .mini-table td {
+      padding: 8px 4px;
+      border-bottom: 1px solid rgba(255,110,180,0.05);
+      color: var(--text);
+    }
+    .mini-table tr:last-child td { border-bottom: none; }
+    .mini-table .suggested-by { font-size: 0.65rem; color: var(--muted); text-align: right; }
 
     @media (max-width: 500px) {
-      .book-scores { padding: 4px 6px 6px; }
-      .avg-stars { font-size: 0.7rem; }
+        .mini-table { font-size: 0.72rem; }
     }
 
-    .backlog-card {
-      background: var(--card-bg); border: 1px solid var(--card-bdr);
-      border-radius: 20px; overflow: hidden; backdrop-filter: blur(12px);
-    }
-    .backlog-table { width: 100%; border-collapse: collapse; }
-    .backlog-table th {
-      font-size: 0.7rem; font-weight: 900; letter-spacing: 2px;
-      color: var(--pink); text-transform: uppercase;
-      padding: 12px 16px; text-align: left;
-      border-bottom: 1px solid rgba(255,110,180,0.15);
-    }
-    .backlog-table td {
-      padding: 10px 16px; font-size: 0.84rem; color: var(--text);
-      border-bottom: 1px solid rgba(255,110,180,0.06);
-      vertical-align: middle;
-    }
-
+    /* GENRE TAGS */
     .tag-horror   { background: rgba(200,50,80,0.3);   color: #ff9eb5; }
     .tag-fantasy  { background: rgba(120,80,255,0.25);  color: #c4aaff; }
     .tag-mystery  { background: rgba(80,80,180,0.25);   color: #a0a8ff; }
@@ -251,15 +294,12 @@
     .tag-scifi    { background: rgba(0,180,220,0.2);    color: #7de8ff; }
     .tag-default  { background: rgba(255,110,180,0.15); color: var(--pink3); }
 
-    .contacts { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; width: 100%; }
-    .pill {
-      display: flex; align-items: center; gap: 9px; padding: 11px 22px; border-radius: 99px;
-      background: var(--card-bg); border: 1px solid var(--card-bdr);
-      text-decoration: none; color: var(--pink3); font-weight: 800; font-size: 0.88rem;
-    }
-    .pill svg { width: 17px; height: 17px; fill: currentColor; }
-
     @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+/* If there is only one genre, make it take the full width */
+.backlog-section:only-child {
+  grid-column: 1 / -1;
+}
   </style>
 </head>
 <body>
@@ -284,15 +324,13 @@
   </div>
 
   <div class="full-width">
-
     <div class="wheel-chart-col">
       <div class="genre-picker-card">
-        <div class="genre-grid" id="genre-grid"></div>
+        <div class="genre-grid-picker" id="genre-grid-picker"></div>
         <button class="pick-btn" onclick="randomPick()">✦ random pick ✦</button>
-        <div id="result-badge"></div>
+        <div id="result-badge" style="font-family:Pacifico; color:var(--pink2); font-size:0.9rem;"></div>
       </div>
       <div class="chart-card">
-        <div style="font-size:0.7rem;font-weight:900;letter-spacing:2px;color:var(--pink);text-align:center">chosen genres</div>
         <canvas id="genreChart"></canvas>
         <div class="chart-legend" id="chart-legend"></div>
       </div>
@@ -306,32 +344,28 @@
 
   <div class="full-width">
     <div class="divider" style="margin-bottom:20px;">♥ backlog ♥</div>
-    <div class="backlog-card">
-      <table class="backlog-table">
-        <thead><tr><th>Name</th><th>Author</th><th>By</th><th>Genre</th></tr></thead>
-        <tbody id="backlog-body"></tbody>
-      </table>
-    </div>
+    <div class="backlog-grid" id="backlog-grid">
+      </div>
   </div>
-
+</div>
 
 <script>
 const GENRES = [
-  { name: "Classic",          emoji: "📖" },
-  { name: "Horror",           emoji: "🩸" },
-  { name: "Fantasy",          emoji: "🔮" },
-  { name: "Romance",          emoji: "🌹" },
-  { name: "Mystery",          emoji: "🕯️" },
-  { name: "Science Fiction",  emoji: "🚀" },
-  { name: "Thriller",         emoji: "🗡️" },
-  { name: "Weird Girl Lit",   emoji: "🦋" },
+  { name: "Classic", emoji: "📖" },
+  { name: "Horror", emoji: "🩸" },
+  { name: "Fantasy", emoji: "🔮" },
+  { name: "Romance", emoji: "🌹" },
+  { name: "Mystery", emoji: "🕯️" },
+  { name: "Science Fiction", emoji: "🚀" },
+  { name: "Thriller", emoji: "🗡️" },
+  { name: "Weird Girl Lit", emoji: "🦋" },
   { name: "Historical Drama", emoji: "🏛️" },
 ];
 
 const CHOSEN_BOOKS = [
-  { title: "From Below", author: "Darcy Coates", genre: "Horror", coverUrl: "https://m.media-amazon.com/images/I/71hzPo8trqL._AC_UF1000,1000_QL80_.jpg", dateStart: "Jan 2, 2026", dateEnd: "Jan 23, 2026", scores: { angel: 4, ashe: 4.5 } },
-  { title: "The Everlasting", author: "Alix E. Harrow", genre: "Fantasy", coverUrl: "https://m.media-amazon.com/images/I/81LbcMVpLPL._UF1000,1000_QL80_.jpg", dateStart: "Jan 26, 2026", dateEnd: "Feb 9, 2026", scores: { angel: 4, ashe: null } },
-  { title: "Victorian Psycho", author: "Virginia Feito", genre: "Horror", coverUrl: "https://giuntialpunto.it/cdn/shop/files/9791281656413.1000.jpg?v=1763341430", dateStart: "Feb Something", dateEnd: "April 8, 2026", scores: { angel: 3.5, ashe: null } },
+  { title: "From Below", author: "Darcy Coates", genre: "Horror", coverUrl: "https://m.media-amazon.com/images/I/71hzPo8trqL._AC_UF1000,1000_QL80_.jpg", dateStart: "Jan 2", dateEnd: "Jan 23", scores: { angel: 4, ashe: 4.5 } },
+  { title: "The Everlasting", author: "Alix E. Harrow", genre: "Fantasy", coverUrl: "https://m.media-amazon.com/images/I/81LbcMVpLPL._UF1000,1000_QL80_.jpg", dateStart: "Jan 26", dateEnd: "Feb 9", scores: { angel: 4, ashe: null } },
+  { title: "Victorian Psycho", author: "Virginia Feito", genre: "Horror", coverUrl: "https://giuntialpunto.it/cdn/shop/files/9791281656413.1000.jpg?v=1763341430", dateStart: "Feb", dateEnd: "April 8", scores: { angel: 3.5, ashe: null } },
 ];
 
 const BACKLOG = [
@@ -342,11 +376,11 @@ const BACKLOG = [
   { title: "The Crimson Labyrinth", author: "Yusuke Kishi", suggestedBy: "ashe", genre: "Horror" },
 ];
 
-const GENRE_TAG = { "Horror":"horror","Fantasy":"fantasy","Mystery":"mystery","Romance":"romance","Science Fiction":"scifi","Thriller":"thriller","Classic":"default","Weird Girl Lit":"default","Historical Drama":"default" };
-const GENRE_COL = { "Horror":"#ff6eb4","Fantasy":"#c4aaff","Mystery":"#a0a8ff","Romance":"#ffaad6","Science Fiction":"#7de8ff","Thriller":"#ffb87a","Classic":"#ffe08a","Weird Girl Lit":"#7dffc4","Historical Drama":"#ffcb90" };
+const GENRE_TAG = { "Horror":"horror","Fantasy":"fantasy","Mystery":"mystery","Romance":"romance","Science Fiction":"scifi","Thriller":"thriller","Classic":"default" };
+const GENRE_COL = { "Horror":"#ff6eb4","Fantasy":"#c4aaff","Mystery":"#a0a8ff","Romance":"#ffaad6","Science Fiction":"#7de8ff","Thriller":"#ffb87a","Classic":"#ffe08a" };
 
 function renderGenreGrid() {
-  document.getElementById('genre-grid').innerHTML = GENRES.map((g, i) => `
+  document.getElementById('genre-grid-picker').innerHTML = GENRES.map((g, i) => `
     <button class="genre-tile" id="tile-${i}" onclick="selectGenre(${i})">
       <span class="tile-emoji">${g.emoji}</span>
       <span>${g.name}</span>
@@ -360,24 +394,31 @@ function selectGenre(idx) {
   document.getElementById('result-badge').textContent = '✦ ' + GENRES[idx].name + ' ✦';
 }
 
-function randomPick() {
-  selectGenre(Math.floor(Math.random() * GENRES.length));
-}
+function randomPick() { selectGenre(Math.floor(Math.random() * GENRES.length)); }
 
 function starsFor(val) {
-  if (val === null || val === undefined) return '';
+  if (!val) return '';
   return '★'.repeat(Math.floor(val)) + ((val % 1) >= 0.5 ? '☆' : '');
 }
 function avg(a, b) {
   if (a !== null && b !== null) return (a + b) / 2;
   return a !== null ? a : b;
 }
-
 function renderBooks() {
   document.getElementById('books-grid').innerHTML = CHOSEN_BOOKS.map(b => {
-    const av2 = avg(b.scores.angel, b.scores.ashe);
-    const scoresHtml = av2 !== null ? `<div class="book-scores"><div class="avg-line"><span class="avg-stars">${starsFor(av2)}</span></div></div>` : '';
-    return `<div class="book-card"><div style="position:relative;"><img src="${b.coverUrl}" class="book-cover" loading="lazy" alt="${b.title}"/><div class="book-info"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div><span class="genre-tag tag-${GENRE_TAG[b.genre]||'default'}">${b.genre}</span><div class="book-dates">${b.dateStart} – ${b.dateEnd}</div></div></div>${scoresHtml}</div>`;
+    const av = (b.scores.angel + (b.scores.ashe || b.scores.angel)) / 2;
+    return `
+      <div class="book-card">
+        <div style="position:relative;">
+          <img src="${b.coverUrl}" class="book-cover" loading="lazy"/>
+          <div class="book-info">
+            <div class="book-title">${b.title}</div>
+            <div class="book-author">${b.author}</div>
+            <span class="genre-tag tag-${GENRE_TAG[b.genre]||'default'}">${b.genre}</span>
+          </div>
+        </div>
+        <div class="avg-stars">${starsFor(av)}</div>
+      </div>`;
   }).join('');
 }
 
@@ -396,12 +437,46 @@ function renderChart() {
   ).join('');
 }
 
-function renderBacklog() {
-  document.getElementById('backlog-body').innerHTML = BACKLOG.map(b =>
-    `<tr><td style="font-weight:700">${b.title}</td><td>${b.author}</td><td>${b.suggestedBy}</td><td><span class="genre-tag tag-${GENRE_TAG[b.genre]||'default'}">${b.genre}</span></td></tr>`
-  ).join('');
+function toggleBacklog(btn) {
+  btn.parentElement.classList.toggle('open');
 }
 
+function renderBacklogGrid() {
+  const grouped = BACKLOG.reduce((acc, book) => {
+    if (!acc[book.genre]) acc[book.genre] = [];
+    acc[book.genre].push(book);
+    return acc;
+  }, {});
+
+  const grid = document.getElementById('backlog-grid');
+  grid.innerHTML = Object.keys(grouped).map(genre => {
+    const books = grouped[genre];
+    const emoji = GENRES.find(g => g.name === genre)?.emoji || "📖";
+    return `
+      <div class="backlog-section">
+        <button class="backlog-trigger" onclick="toggleBacklog(this)">
+          <div class="trigger-info">
+            <span>${emoji} ${genre}</span>
+            <span class="count-bubble">${books.length}</span>
+          </div>
+          <span class="backlog-chevron">▼</span>
+        </button>
+        <div class="backlog-drawer">
+          <table class="mini-table">
+            ${books.map(b => `
+              <tr>
+                <td><b>${b.title}</b><br><span style="opacity:0.6; font-size:0.6rem;">${b.author}</span></td>
+                <td class="suggested-by">via ${b.suggestedBy}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Background Hearts
 const hc = document.getElementById('hContainer');
 for (let i = 0; i < 15; i++) {
   const h = document.createElement('span');
@@ -412,7 +487,7 @@ for (let i = 0; i < 15; i++) {
 
 renderGenreGrid();
 renderChart();
-renderBacklog();
+renderBacklogGrid();
 renderBooks();
 </script>
 </body>
