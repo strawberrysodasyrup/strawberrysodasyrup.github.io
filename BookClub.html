@@ -1,1 +1,557 @@
-dddddddd
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🍓 Book Club 🍓</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --pink: #ff6eb4;
+      --pink2: #ff9ed2;
+      --pink3: #ffc2e2;
+      --white: #fff5f9;
+      --card-bg: rgba(255,255,255,0.05);
+      --card-bdr: rgba(255,110,180,0.25);
+      --text: #fff0f7;
+      --muted: #c490aa;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .bg-glow {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 40% at 15% 20%, rgba(255,110,180,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 85% 80%, rgba(200,0,100,0.10) 0%, transparent 70%);
+    }
+    .hearts-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .hrt {
+      position: absolute; opacity: 0;
+      animation: floatHeart linear infinite;
+      filter: drop-shadow(0 0 5px rgba(255,110,180,0.6));
+    }
+    @keyframes floatHeart {
+      0%   { opacity: 0;    transform: translateY(105vh) rotate(-10deg); }
+      8%   { opacity: 0.4; }
+      92%  { opacity: 0.25; }
+      100% { opacity: 0;    transform: translateY(-8vh) rotate(15deg); }
+    }
+    .page {
+      position: relative; z-index: 1;
+      max-width: 860px; margin: 0 auto;
+      padding: 50px 24px 90px;
+      display: flex; flex-direction: column; align-items: center; gap: 40px;
+    }
+    .chars-top {
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 4px; width: 100%;
+      animation: fadeUp 0.6s ease both;
+    }
+    .chars-top img {
+      object-fit: contain;
+      filter: drop-shadow(0 0 16px rgba(255,110,180,0.5));
+      transition: transform 0.3s ease;
+    }
+    .chars-top img:hover { transform: translateY(-6px) scale(1.05); }
+    .hero { text-align: center; animation: fadeUp 0.7s ease 0.1s both; }
+    .hero-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.7rem; line-height: 1.8;
+      background: linear-gradient(130deg, #ff9ed2 0%, #ffffff 45%, #ff6eb4 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 28px rgba(255,110,180,0.35));
+    }
+    .name-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 18px; padding: 7px 22px; border-radius: 99px;
+      background: rgba(255,110,180,0.10);
+      border: 1px solid rgba(255,110,180,0.35);
+      font-size: 0.88rem; font-weight: 800;
+      color: var(--pink2); letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .divider {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      font-size: 0.78rem; font-weight: 900; letter-spacing: 3px;
+      color: var(--pink);
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,110,180,0.4), transparent);
+    }
+    .heart-row {
+      display: flex; gap: 8px; font-size: 1rem;
+      animation: fadeUp 0.7s ease 0.15s both;
+    }
+    .heart-row span { color: var(--pink); animation: heartPulse 1.8s ease-in-out infinite; }
+    .heart-row span:nth-child(2) { animation-delay: 0.2s; color: var(--pink2); }
+    .heart-row span:nth-child(3) { animation-delay: 0.4s; color: var(--pink3); }
+    .heart-row span:nth-child(4) { animation-delay: 0.6s; color: var(--pink2); }
+    .heart-row span:nth-child(5) { animation-delay: 0.8s; color: var(--pink); }
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.35); opacity: 1; }
+    }
+    .full-width { width: 100%; animation: fadeUp 0.7s ease 0.2s both; }
+
+    /* ── Wheel + Chart two-col ── */
+    .wheel-chart-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      align-items: stretch;
+    }
+    @media (max-width: 580px) { .wheel-chart-col { grid-template-columns: 1fr; } }
+
+    .wheel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bdr);
+      border-radius: 20px;
+      padding: 24px 20px;
+      backdrop-filter: blur(12px);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .wheel-container { position: relative; display: inline-block; width: 100%; max-width: 300px; }
+    canvas#wheel { border-radius: 50%; display: block; width: 100% !important; height: auto !important; }
+    #pointer {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 26px solid var(--pink);
+      filter: drop-shadow(0 0 6px rgba(255,110,180,0.8));
+      z-index: 2;
+    }
+    .spin-btn {
+      padding: 9px 30px; font-size: 0.9rem; font-weight: 800;
+      font-family: 'Nunito', sans-serif;
+      background: rgba(255,110,180,0.12);
+      border: 1px solid rgba(255,110,180,0.5);
+      border-radius: 99px; cursor: pointer; color: var(--pink2);
+      transition: all 0.2s; letter-spacing: 0.5px;
+    }
+    .spin-btn:hover { background: rgba(255,110,180,0.22); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,110,180,0.2); }
+    #result-badge {
+      font-family: 'Pacifico', cursive; font-size: 1.1rem;
+      color: var(--pink2); min-height: 28px; text-align: center;
+    }
+
+    /* ── Genre chart card ── */
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bdr);
+      border-radius: 20px;
+      padding: 24px 20px;
+      backdrop-filter: blur(12px);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 16px;
+    }
+    .chart-card canvas#genreChart {
+      width: 160px !important;
+      height: 160px !important;
+      flex-shrink: 0;
+    }
+    .chart-legend { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Books grid ── */
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+    .book-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bdr);
+      border-radius: 16px; overflow: hidden;
+      transition: border-color 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      display: flex; flex-direction: column;
+    }
+    .book-card:hover { border-color: rgba(255,110,180,0.6); }
+    .book-cover { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
+
+    .book-info {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      padding: 12px;
+      background: linear-gradient(transparent 25%, rgba(0,0,0,0.88) 60%, #000 100%);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      /* stop overlay from covering the star strip at the bottom */
+      bottom: 72px;
+    }
+    .book-card.active .book-info,
+    .book-card:hover .book-info { opacity: 1; }
+
+    .book-title  { font-size: 0.8rem;  font-weight: 900; color: var(--white); line-height: 1.2; margin-bottom: 2px; }
+    .book-author { font-size: 0.68rem; color: var(--muted); margin-bottom: 6px; }
+    .genre-tag   { font-size: 0.6rem;  font-weight: 800; padding: 2px 7px; border-radius: 99px; letter-spacing: 0.3px; display: inline-block; }
+    .book-dates  { font-size: 0.6rem;  color: var(--pink3); opacity: 0.8; margin-top: 4px; }
+
+    /* ── Star strip at bottom of each card ── */
+    .book-stars-wrap {
+      padding: 8px 10px 10px;
+      border-top: 1px solid rgba(255,110,180,0.12);
+      display: flex; flex-direction: column; gap: 4px;
+      background: rgba(0,0,0,0.35);
+    }
+    .star-row {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.65rem;
+    }
+    .star-label { color: var(--muted); font-weight: 700; min-width: 40px; }
+    .stars { color: var(--pink); font-size: 0.78rem; letter-spacing: 1px; }
+    .avg-row {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.65rem;
+      border-top: 1px solid rgba(255,110,180,0.15);
+      padding-top: 5px; margin-top: 2px;
+    }
+    .avg-label { color: var(--pink2); font-weight: 900; min-width: 40px; font-size: 0.6rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    .avg-stars { color: var(--pink2); font-size: 0.85rem; letter-spacing: 1px; }
+
+    /* ── Scores entry table ── */
+    .scores-card, .backlog-card {
+      background: var(--card-bg); border: 1px solid var(--card-bdr);
+      border-radius: 20px; overflow: hidden; backdrop-filter: blur(12px);
+    }
+    .scores-table, .backlog-table { width: 100%; border-collapse: collapse; }
+    .scores-table th, .backlog-table th {
+      font-size: 0.7rem; font-weight: 900; letter-spacing: 2px;
+      color: var(--pink); text-transform: uppercase;
+      padding: 12px 16px; text-align: left;
+      border-bottom: 1px solid rgba(255,110,180,0.15);
+    }
+    .scores-table td, .backlog-table td {
+      padding: 10px 16px; font-size: 0.84rem; color: var(--text);
+      border-bottom: 1px solid rgba(255,110,180,0.06);
+      vertical-align: middle;
+    }
+    .score-val { font-weight: 800; color: var(--pink2); margin-right: 6px; font-size: 0.8rem; }
+    .score-input {
+      width: 54px; padding: 4px 7px; border-radius: 6px;
+      background: rgba(255,110,180,0.08); border: 1px solid rgba(255,110,180,0.3);
+      color: var(--pink2); font-size: 0.75rem; font-family: 'Nunito', sans-serif;
+    }
+    .score-submit {
+      padding: 4px 11px; border-radius: 99px; cursor: pointer;
+      background: rgba(255,110,180,0.12); border: 1px solid rgba(255,110,180,0.4);
+      color: var(--pink2); font-size: 0.7rem; font-weight: 800;
+      font-family: 'Nunito', sans-serif; margin-left: 5px;
+      transition: background 0.15s;
+    }
+    .score-submit:hover { background: rgba(255,110,180,0.24); }
+
+    /* ── Genre tag colours ── */
+    .tag-horror   { background: rgba(200,50,80,0.3);   color: #ff9eb5; }
+    .tag-fantasy  { background: rgba(120,80,255,0.25);  color: #c4aaff; }
+    .tag-mystery  { background: rgba(80,80,180,0.25);   color: #a0a8ff; }
+    .tag-romance  { background: rgba(255,110,180,0.25); color: #ffaad6; }
+    .tag-scifi    { background: rgba(0,180,220,0.2);    color: #7de8ff; }
+    .tag-default  { background: rgba(255,110,180,0.15); color: var(--pink3); }
+
+    .contacts { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; width: 100%; }
+    .pill {
+      display: flex; align-items: center; gap: 9px; padding: 11px 22px; border-radius: 99px;
+      background: var(--card-bg); border: 1px solid var(--card-bdr);
+      text-decoration: none; color: var(--pink3); font-weight: 800; font-size: 0.88rem;
+    }
+    .pill svg { width: 17px; height: 17px; fill: currentColor; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="hearts-bg" id="hContainer"></div>
+
+<div class="page">
+  <div class="chars-top">
+    <img src="https://media.tenor.com/JXn-34kLMaUAAAAj/pixel-heart.gif" alt="" style="height:30px"/>
+    <img src="https://www.nicepng.com/png/full/419-4193239_kawaii-bunny-and-pink-image-pink-kawaii-png.png" alt="" style="height:90px; margin:0 8px"/>
+    <img src="https://media.tenor.com/JXn-34kLMaUAAAAj/pixel-heart.gif" alt="" style="height:30px"/>
+  </div>
+
+  <div class="hero">
+    <h1 class="hero-title">Book Club ♡</h1>
+    <div class="name-badge">✿ &nbsp; angel & ashe's list &nbsp; ✿</div>
+  </div>
+
+  <div class="heart-row">
+    <span>♥</span><span>♡</span><span>♥</span><span>♡</span><span>♥</span>
+  </div>
+
+  <!-- Wheel + Genre Chart side by side -->
+  <div class="full-width">
+    <div class="divider" style="margin-bottom:20px;">♥ spin for next genre ♥</div>
+    <div class="wheel-chart-col">
+      <div class="wheel-card">
+        <div class="wheel-container">
+          <canvas id="wheel" width="300" height="300"></canvas>
+          <div id="pointer"></div>
+        </div>
+        <button class="spin-btn" onclick="spinWheel()">✦ spin ✦</button>
+        <div id="result-badge"></div>
+      </div>
+      <div class="chart-card">
+        <div style="font-size:0.7rem;font-weight:900;letter-spacing:2px;color:var(--pink);align-self:flex-start;">chosen genres</div>
+        <canvas id="genreChart"></canvas>
+        <div class="chart-legend" id="chart-legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book grid (stars shown on each card) -->
+  <div class="full-width">
+    <div class="divider" style="margin-bottom:20px;">♥ chosen books ♥</div>
+    <div class="books-grid" id="books-grid"></div>
+  </div>
+
+  <!-- Score entry table -->
+  <div class="full-width">
+    <div class="divider" style="margin-bottom:20px;">♥ add scores ♥</div>
+    <div class="scores-card">
+      <table class="scores-table">
+        <thead><tr><th>Book</th><th>Angel</th><th>Ashe</th></tr></thead>
+        <tbody id="scores-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Backlog -->
+  <div class="full-width">
+    <div class="divider" style="margin-bottom:20px;">♥ backlog ♥</div>
+    <div class="backlog-card">
+      <table class="backlog-table">
+        <thead><tr><th>Name</th><th>Author</th><th>Suggested by</th><th>Genre</th></tr></thead>
+        <tbody id="backlog-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="divider">♥ find me here ♥</div>
+  <div class="contacts">
+    <a href="https://x.com/bunnyaeongie" class="pill">
+      <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      @bunnyaeongie
+    </a>
+  </div>
+</div>
+
+<script>
+const JSONBIN_ID  = "69d7dc36856a68218916e2fd";
+const JSONBIN_KEY = "$2a$10$sMWdInS5I2gjuwoSNcTYb.5GACX8bALvN3PKNedkPjciRWphx09e6";
+
+const CHOSEN_BOOKS = [
+  { title:"From Below",      author:"Darcy Coates",   genre:"Horror",  coverUrl:"https://m.media-amazon.com/images/I/71hzPo8trqL._AC_UF1000,1000_QL80_.jpg",   dateStart:"Jan 2, 2026",   dateEnd:"Jan 23, 2026"  },
+  { title:"The Everlasting", author:"Alix E. Harrow", genre:"Fantasy", coverUrl:"https://m.media-amazon.com/images/I/81LbcMVpLPL._UF1000,1000_QL80_.jpg",      dateStart:"Jan 26, 2026",  dateEnd:"Feb 9, 2026"   },
+  { title:"Victorian Psycho",author:"Virginia Feito", genre:"Horror",  coverUrl:"https://giuntialpunto.it/cdn/shop/files/9791281656413.1000.jpg?v=1763341430", dateStart:"Feb Something", dateEnd:"April 8, 2026" },
+];
+
+const BACKLOG = [
+  { title:"Salvation Day",          author:"Kali Wallace", suggestedBy:"angel", genre:"Horror" },
+  { title:"Sister, Butcher, Sister",author:"K.D. Aldyn",   suggestedBy:"ashe",  genre:"Horror" },
+];
+
+const GENRE_TAG_MAP = { "Horror":"horror","Fantasy":"fantasy","Mystery":"mystery","Romance":"romance","Science Fiction":"scifi","Thriller":"thriller","Classic":"classic","Weird Girl Lit":"weird","Historical Drama":"historical" };
+const GENRE_COLORS  = { "Horror":"#ff6eb4","Fantasy":"#c4aaff","Mystery":"#a0a8ff","Romance":"#ffaad6","Science Fiction":"#7de8ff","Thriller":"#ffb87a","Classic":"#ffe08a","Weird Girl Lit":"#7dffc4","Historical Drama":"#ffcb90" };
+
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+const HEADERS = { "Content-Type":"application/json","X-Master-Key":JSONBIN_KEY };
+
+let liveScores = {};
+
+async function fetchScores() {
+  try {
+    const r = await fetch(JSONBIN_URL+"/latest",{headers:HEADERS});
+    const d = await r.json();
+    return d.record.scores || {};
+  } catch(e) { return null; }
+}
+async function saveScores(s) {
+  try {
+    await fetch(JSONBIN_URL,{method:"PUT",headers:HEADERS,body:JSON.stringify({scores:s})});
+    return true;
+  } catch(e) { return false; }
+}
+
+// Convert a numeric score to star symbols.
+// Whole numbers → all ★. Any .5 → extra ☆ at the end.
+function starsFor(val) {
+  if (val === null || val === undefined) return '—';
+  const full = Math.floor(val);
+  const half = (val % 1) >= 0.5 ? 1 : 0;
+  return '★'.repeat(full) + (half ? '☆' : '');
+}
+
+function renderBooks() {
+  const grid = document.getElementById('books-grid');
+  grid.innerHTML = CHOSEN_BOOKS.map((b,i) => {
+    const s  = liveScores[b.title] || {};
+    const av = s.angel ?? null;
+    const as = s.ashe  ?? null;
+
+    let avgHtml = '';
+    if (av !== null || as !== null) {
+      let avg;
+      if (av !== null && as !== null) avg = (av + as) / 2;
+      else avg = av !== null ? av : as;
+      avgHtml = `<div class="avg-row"><span class="avg-label">avg</span><span class="avg-stars">${starsFor(avg)}</span></div>`;
+    }
+
+    return `
+    <div class="book-card" onclick="this.classList.toggle('active')">
+      <img src="${b.coverUrl}" class="book-cover" loading="lazy" alt="${b.title}"/>
+      <div class="book-info">
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">${b.author}</div>
+        <span class="genre-tag tag-${GENRE_TAG_MAP[b.genre]||'default'}">${b.genre}</span>
+        <div class="book-dates">${b.dateStart} – ${b.dateEnd}</div>
+      </div>
+      <div class="book-stars-wrap">
+        <div class="star-row"><span class="star-label">angel</span><span class="stars">${starsFor(av)}</span></div>
+        <div class="star-row"><span class="star-label">ashe</span><span class="stars">${starsFor(as)}</span></div>
+        ${avgHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function submitScore(bookIdx, who) {
+  const input = document.getElementById(`input-${who}-${bookIdx}`);
+  const val   = parseFloat(input.value);
+  if (isNaN(val) || val < 0 || val > 5) {
+    input.style.borderColor = '#ff4466'; return;
+  }
+  input.style.borderColor = '';
+  const title = CHOSEN_BOOKS[bookIdx].title;
+  if (!liveScores[title]) liveScores[title] = { angel:null, ashe:null };
+  liveScores[title][who] = val;
+  const ok = await saveScores(liveScores);
+  if (ok) { input.value = ''; renderScores(liveScores); renderBooks(); }
+}
+
+function renderScores(scores) {
+  document.getElementById('scores-body').innerHTML = CHOSEN_BOOKS.map((b,i) => {
+    const s  = scores[b.title] || {};
+    const av = s.angel ?? null;
+    const as = s.ashe  ?? null;
+    return `<tr>
+      <td style="font-weight:700">${b.title}</td>
+      <td>
+        ${av !== null ? `<span class="score-val">${av} ${starsFor(av)}</span>` : ''}
+        <input class="score-input" id="input-angel-${i}" type="number" min="0" max="5" step="0.5" placeholder="0–5">
+        <button class="score-submit" onclick="submitScore(${i},'angel')">save</button>
+      </td>
+      <td>
+        ${as !== null ? `<span class="score-val">${as} ${starsFor(as)}</span>` : ''}
+        <input class="score-input" id="input-ashe-${i}" type="number" min="0" max="5" step="0.5" placeholder="0–5">
+        <button class="score-submit" onclick="submitScore(${i},'ashe')">save</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderChart() {
+  const counts = {};
+  CHOSEN_BOOKS.forEach(b => { counts[b.genre] = (counts[b.genre]||0)+1; });
+  const labels   = Object.keys(counts);
+  const data     = Object.values(counts);
+  const bgColors = labels.map(l => GENRE_COLORS[l] || "#ff9ed2");
+  new Chart(document.getElementById('genreChart'), {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data, backgroundColor:bgColors, borderColor:'#0a0a0a', borderWidth:2 }] },
+    options:{ cutout:'70%', plugins:{ legend:{ display:false } }, maintainAspectRatio:true }
+  });
+  document.getElementById('chart-legend').innerHTML = labels.map((l,i) =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${bgColors[i]}"></div><span>${l}</span><span style="margin-left:auto;font-weight:800;">${data[i]}</span></div>`
+  ).join('');
+}
+
+function renderBacklog() {
+  document.getElementById('backlog-body').innerHTML = BACKLOG.map(b =>
+    `<tr><td style="font-weight:700">${b.title}</td><td>${b.author}</td><td>${b.suggestedBy}</td><td><span class="genre-tag tag-${GENRE_TAG_MAP[b.genre]||'default'}">${b.genre}</span></td></tr>`
+  ).join('');
+}
+
+/* ── Wheel ── */
+const GENRES = ["Classic","Horror","Fantasy","Romance","Mystery","Science Fiction","Thriller","Weird Girl Lit","Historical Drama"];
+const WHEEL_SIZE = 300, WHEEL_R = 142;
+let wheelAngle = 0, isSpinning = false;
+
+function drawWheel(rot) {
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const cx = WHEEL_SIZE/2, cy = WHEEL_SIZE/2, r = WHEEL_R;
+  ctx.clearRect(0,0,WHEEL_SIZE,WHEEL_SIZE);
+  const seg = (Math.PI*2)/GENRES.length;
+  GENRES.forEach((g,i) => {
+    const start = rot + i*seg - Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+seg);
+    ctx.fillStyle = ["#3d1a3a","#2a1040","#1a2a40","#0d2e1a","#2e1a0d","#3a1a2e","#1a2040","#2a3a1a","#3a2a10"][i%9];
+    ctx.fill();
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(start+seg/2);
+    ctx.fillStyle="#fff"; ctx.font="800 10px Nunito"; ctx.textAlign="right";
+    ctx.fillText(g, r-12, 4); ctx.restore();
+  });
+}
+
+function spinWheel() {
+  if (isSpinning) return;
+  isSpinning = true;
+  const extra = 8*Math.PI + Math.random()*4*Math.PI;
+  const startAngle = wheelAngle, duration = 2500, startTime = performance.now();
+  function frame(now) {
+    const t = Math.min((now-startTime)/duration,1);
+    const ease = 1 - Math.pow(1-t,3);
+    wheelAngle = startAngle + extra*ease;
+    drawWheel(wheelAngle);
+    if (t < 1) requestAnimationFrame(frame);
+    else {
+      isSpinning = false;
+      const idx = Math.floor(((-wheelAngle%(Math.PI*2))+(Math.PI*2))%(Math.PI*2)/((Math.PI*2)/GENRES.length));
+      document.getElementById('result-badge').textContent = '✦ '+GENRES[idx%GENRES.length]+' ✦';
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* floating hearts */
+const hc = document.getElementById('hContainer');
+for (let i=0;i<15;i++){
+  const h=document.createElement('span');
+  h.className='hrt'; h.textContent='♥';
+  h.style.cssText=`left:${Math.random()*100}vw;animation-duration:${10+Math.random()*10}s;animation-delay:${Math.random()*5}s;`;
+  hc.appendChild(h);
+}
+
+async function init() {
+  drawWheel(0);
+  liveScores = await fetchScores() || {};
+  renderBooks();
+  renderChart();
+  renderScores(liveScores);
+  renderBacklog();
+}
+init();
+</script>
+</body>
+</html>
