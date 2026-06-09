@@ -466,13 +466,20 @@
   <div class="hard-note" id="hard-note-hard">Hard Mode: Love Interest locked to include <strong>Gwylan</strong></div>
   <div class="hard-note" id="hard-note-xhard">Extra Hard Mode: Love Interest locked to include <strong>Gwylan</strong> · Divine Transformation locked to <strong>Angel</strong></div>
 
-  <!-- SEX -->
+  <!-- SEX & GENDER -->
   <div class="section open">
     <div class="section-header" onclick="toggleSection(this)">
-      <h3>⚧ Character Sex</h3>
-      <span class="chevron">▼</span>
+      <h3>⚧ Character Sex &amp; Gender</h3>
+      <span class="chevron">ᛝ</span>
     </div>
     <div class="section-body">
+	 <div class="hint" style="margin-top:0.7rem;margin-bottom:0.3rem;"><strong>Gender</strong></div>
+      <div class="sex-toggle">
+        <button class="sex-btn active" id="gender-f" onclick="setGender('woman')">Woman</button>
+        <button class="sex-btn" id="gender-m" onclick="setGender('man')">Man</button>
+        <button class="sex-btn" id="gender-n" onclick="setGender('neither')">Neither</button>
+      </div>
+      <div class="hint" style="margin-bottom:0.3rem;"><strong>Sex</strong></div>
       <div class="sex-toggle">
         <button class="sex-btn active" id="sex-f" onclick="setSex('female')">Female</button>
         <button class="sex-btn" id="sex-m" onclick="setSex('male')">Male</button>
@@ -485,13 +492,34 @@
   <div class="section">
     <div class="section-header" onclick="toggleSection(this)">
       <h3>🧩 Additional Mods</h3>
-      <span class="chevron">▼</span>
+      <span class="chevron">ᛝ</span>
     </div>
     <div class="section-body">
       <div class="mod-toggle">
         <button class="mod-btn" id="mod-bailey" onclick="toggleMod('baileyExpansion')">Bailey Expansion</button>
+        <button class="mod-btn" id="mod-newworld" onclick="toggleMod('newWorld')">New World</button>
+        <button class="mod-btn" id="mod-plus" onclick="toggleMod('plus')">Plus</button>
       </div>
-      <div class="hint">Toggle extra content mods that affect the roll pool.</div>
+      <div class="hint">Toggle extra content mods that affect the roll pool. <strong>Plus</strong> and <strong>New World</strong> cannot be enabled at the same time.</div>
+    </div>
+  </div>
+  
+  
+    <!-- GAME MODE PICKER -->
+  <div class="section open">
+    <div class="section-header" onclick="toggleSection(this)">
+      <h3>⚠️ Game Difficulty</h3>
+      <span class="chevron">ᛝ</span>
+    </div>
+    <div class="section-body">
+      <div class="hint">Choose which in-game difficulty mode to play, or let it be randomly picked. <strong>Soft Mode</strong> will never be randomly assigned — only if you choose it yourself.</div>
+      <div class="sex-toggle" id="gamemode-toggle">
+        <button class="sex-btn" id="gm-random" onclick="setGameMode('random')">🎲 Random</button>
+        <button class="sex-btn" id="gm-Normal" onclick="setGameMode('Normal')">Normal</button>
+        <button class="sex-btn" id="gm-Soft" onclick="setGameMode('Soft')">Soft</button>
+        <button class="sex-btn" id="gm-Hard" onclick="setGameMode('Hard')">Hard</button>
+        <button class="sex-btn" id="gm-Iron MAn" onclick="setGameMode('Iron Man')">Iron Man</button>
+      </div>
     </div>
   </div>
 
@@ -499,7 +527,7 @@
   <div class="section">
     <div class="section-header" onclick="toggleSection(this)">
       <h3>⭐ Feat Pool</h3>
-      <span class="chevron">▼</span>
+      <span class="chevron">ᛝ</span>
     </div>
     <div class="section-body">
       <div class="hint">Each enabled category draws <strong>4 feats</strong>. Click feats below to pin/unpin them so they always stay in the pool for that category.</div>
@@ -507,6 +535,7 @@
       <div id="feat-panels"></div>
     </div>
   </div>
+
 
   <div class="actions">
     <button class="btn-roll" id="roll-btn" onclick="doRoll()">✦ Roll the Dice ✦</button>
@@ -522,9 +551,8 @@
       <button class="copy-btn" onclick="clearSavedRun()">Clear Saved Run</button>
     </div>
 	<div class="save-btns save-png-row">
-      <button class="copy-btn" onclick="saveChallenge()">Save PNG</button>
-      <button class="copy-btn" onclick="saveChallengeNoFeats()">Save Challenge PNG</button>
-      <button class="copy-btn feats-only" onclick="saveFeatsOnly()">Save Feats PNG</button>
+      <button class="copy-btn" onclick="saveAllPNGs()">📷 Save PNG</button>
+      <button class="copy-btn feats-only" onclick="saveGameSettings()">💾 Save Game Settings</button>
     </div>
   </div>
 
@@ -533,17 +561,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const DATA = {
-  bodySize: ["Miniature","Tiny","Small","Normal","Tall","Large","Giant"],
+  bodySize: ["Tiny","Small","Normal","Tall"],
+  bodySizePlus: ["Miniature","Tiny","Small","Normal","Tall","Large","Giant"],
   body: ["Classic","Slender","Curvy","Soft"],
   penisSize: ["Micro","Mini","Tiny","Small","Normal","Large","Enormous"],
   breastSize: ["Flat","Budding","Tiny","Small","Pert","Modest","Full","Large","Ample","Massive","Huge","Gigantic","Enormous"],
   assSize: ["Slender","Slim","Modest","Cushioned","Soft","Round","Plump","Large","Huge"],
   eyeColour: ["Purple","Dark Blue","Light Blue","Amber","Hazel","Green","Lime Green","Red","Pink","Grey","Light Grey"],
   hairColour: ["Red","Jet Black","Black","Brown","Soft Brown","Light Brown","Burnt Orange","Strawberry Blond","Ginger","Blond","Soft Blonde","Platinum Blond","Ashy Blond","Blood Orange","Blue","Deep Blue","Neon Blue","Green","Dark Lime","Toxic Green","Teal","Pink","Bright Pink","Hot Pink","Soft Pink","Crimson","Purple","Medium Purple","White","Snow White"],
-  hairLength: ["Ear","Neck","Chest","Navel","Thighs","Feet"],
+  hairLength: ["Ear","Neck","Chest","Waist","Knee","Floor"],
   awareness: ["Innocent","Knowledgeable"],
   background: ["Nerd","Athlete","Delinquent","Promiscuous","Exhibitionist","Deviant","Beautiful","Lustful","Dendrophile"],
-  gameMode: ["Normal","Soft","Hard"],
+  gameMode: ["Normal","Soft","Hard","Iron Man"],
   loveInterests: ["Robin","Whitney","Eden","Kylar","Avery","Black Wolf","Great Hawk","Sydney","Gwylan","Alex"],
   virginity: ["Robin","Whitney","Kylar","Eden","Avery","Leighton","Alex","Great Hawk","Wren","Black Wolf","Sydney","Harper","Morgan","Gwylan"],
   animalTransform: ["Wolf","Cat","Cow","Harpy","Fox","Bunny","None"],
@@ -579,6 +608,10 @@ const DATA = {
   badEnding: ["Asylum","Underground Farm","Underground Brothel","Prison","Dog Pound","Mines","Island","Pirate Ship"],
 };
 
+// jsons
+const SETTINGS_PLUS = {"general":{"map":{},"shopDefaults":{"alwaysBackToShopButton":false,"color":"black","colourItems":"random","compactMode":false,"disableReturn":false,"highContrast":false,"mannequinGender":"same","mannequinGenderFromClothes":false,"noHelp":false,"noTraits":false,"secColor":"black"},"options":{"neverNudeMenus":false,"showCaptionText":true,"clothingCaption":true,"clothingReplacementWarning":false,"sidebarStats":"all","sidebarTime":"top","combatControls":"radio","mapMovement":true,"mapTop":false,"mapMarkers":false,"images":1,"combatImages":1,"bodywritingImages":true,"silhouetteEnabled":true,"sidebarAnimations":true,"blinkingEnabled":true,"combatAnimations":true,"halfClosedEnabled":false,"characterLightEnabled":true,"lightSpotlight":0.2,"lightGradient":0.1,"lightGlow":0.1,"lightFlat":0,"lightTFColor":0.2,"combatLightEnabled":true,"combatLightOffsetY":52,"combatLightSpotlight":0.2,"combatLightSpotlightX":118,"combatLightSpotlightY":15,"combatLightGradient":0,"combatLightGlow":0.1,"combatLightFlat":0,"combatLightTFColor":0.2,"maxStates":5,"historyControls":false,"useNarrowMarket":false,"skipStatisticsConfirmation":false,"passageCount":"disabled","playtime":false,"numberify_enabled":1,"timestyle":"military","tipdisable":false,"pepperSprayDisplay":"sprays","condomsDisplay":"standard","closeButtonMobile":false,"showDebugRenderer":false,"showCombatTools":false,"numpad":false,"traitOverlayFormat":"table","dateFormat":"en-GB"},"settings":{"analEnabled":true,"analingusGivingEnabled":true,"analingusReceivingEnabled":true,"transformAnimalEnabled":true,"asphyxiaLevel":3,"penisModifier":0,"breastModifier":0,"rentCostModifier":1,"baseNpcPregnancyChance":8,"basePlayerPregnancyChance":80,"beastMaleChanceSplit":false,"beastMaleChanceMale":80,"beastMaleChanceFemale":80,"beesEnabled":true,"bestialityEnabled":true,"blindStatsEnabled":false,"bodyWritingLevel":3,"breastFeedingEnabled":true,"cheatsEnabledToggle":false,"condomLevel":3,"clothingCostModifier":1,"furnitureCostModifier":1,"lewdClothingCostModifier":1,"schoolClothingCostModifier":1,"underwearCostModifier":1,"tendingYieldModifier":5,"toyDildoEnabled":true,"transformDivineEnabled":true,"analDoubleEnabled":true,"vaginalDoubleEnabled":true,"allureModifier":1,"facesitEnabled":true,"pregnancySpeechEnabled":true,"footFetishEnabled":true,"forcedCrossdressingEnabled":true,"horsesEnabled":true,"humanPregnancyMonths":3,"hypnosisEnabled":true,"npcVirginChanceAdult":10,"npcVirginChanceStudent":50,"darkSkinChance":10,"lurkersEnabled":true,"fertilityCycleEnabled":true,"toyMultiplePenetrationEnabled":true,"multipleWardrobes":"isolated","maleChanceSplit":false,"npcPregnancyEnabled":true,"maleChanceMale":50,"maleChanceFemale":50,"nudeGenderPerception":1,"monsterHallucinationsOnly":true,"parasitePregnancyEnabled":true,"parasitesEnabled":true,"beastMaleChance":80,"monsterChance":50,"maleNPCVaginaChance":0,"maleVictimChance":50,"maleChance":50,"femaleNPCPenisChance":0,"straponChance":0,"plantsEnabled":true,"playerPregnancyEggLayingEnabled":true,"playerPregnancyBeastEnabled":true,"playerPregnancyHumanEnabled":true,"pregnancyType":"realistic","pubicHairEnabled":false,"ruinedOrgasmEnabled":true,"skillCheckStyle":"words","slimesEnabled":true,"slugsEnabled":true,"spidersEnabled":true,"swarmsEnabled":true,"tentaclesEnabled":true,"voreEnabled":true,"waspsEnabled":true,"watersportsEnabled":false,"toyWhipEnabled":true,"wolfPregnancyWeeks":4},"wardrobeDefaults":{"showTraits":false,"extraInfo":false},"combatExtended":{"standingFights":0,"standingFightsType":"normal","reverseRape":0,"passiveDodging":0,"activeDodging":0,"uncappedDodgeChance":0,"dodgeChanceCap":90,"blocking":0,"countering":0,"feinting":0,"hookpunching":0,"brawlingToggle":0,"footworkToggle":0,"strikingToggle":0,"kickingToggle":0,"enemyPassiveDodging":0,"enemyActiveDodging":0,"enemyBlocking":0,"enemyCountering":0,"enemyFeinting":0,"enemyBaseDodgeChance":1,"enemyBaseDodgeChanceMult":2,"enemyMartialArts":0,"enemyMartialArtsScaling":"random","enemyMartialArtsLevelScalingMult":50,"enemyLevelDayScaling":0,"enemyLevelDayScalingMult":1,"enemyHealthDayScaling":0,"enemyHealthDayScalingMult":5,"enemyDayScaling":7,"enemyInfiniteDayScaling":0,"enemyDayScalingLimit":20,"enemyLevelDefeatScaling":0,"enemyLevelDefeatScalingMult":1,"enemyHealthDefeatScaling":0,"enemyHealthDefeatScalingMult":5,"enemyDefeatScaling":10,"enemyInfiniteDefeatScaling":0,"enemyDefeatScalingLimit":20},"AMCTraits":{"halfGain":0,"physique":1,"willpower":1,"skulduggery":1,"dancing":1,"swimming":1,"athletics":1,"tending":1,"housekeeping":1,"brawling":1,"footwork":1,"striking":1,"kicking":1,"science":1,"maths":1,"english":1,"history":1,"sexFame":1,"prostitutionFame":1,"rapeFame":1,"bestialityFame":1,"exhibitionismFame":1,"pregnancyFame":1,"impregFame":1,"scrapFame":1,"goodFame":1,"businessFame":1,"socialFame":1,"modelFame":1},"bannerstyle":"default","enemystatstyle":"default","realisticTransparency":0,"wardrobeMult":1,"bikePersistentLocation":0,"bikeSecurity":0,"combatTimePass":10,"depositMax":0,"depositWithdrawalFee":10,"parasiteCapMult":1,"tirednessMaxScalingToggle":0,"stressMaxScalingToggle":0,"athleticsFitnessToggle":0,"DoLPTFBuffs":0,"DoLPTFTempTolerance":0,"dancingRebalance":0,"produce_yield_factor":100,"statGainMult":100,"stressBeauty":0,"beautyMult":1,"multiOrgasmToggle":0,"NNPCMultiOrgasmToggle":0,"multiOrgasmLustScaling":0,"nnpcHealthMult":100,"nnpcArousalMult":100,"npcHealthMult":100,"npcArousalMult":100,"npcStealMoneyToggle":0,"npcStealMoneyRandomToggle":0,"npcStealMoneyPercentage":10,"npcDescGenType":"vanilla","npcDescDemonDisable":0,"npcBreastGenType":"vanilla","npcPenisGenType":"vanilla","beastMultiOrgasmToggle":0,"beastGroupFight":0,"beastHealthMult":100,"beastArousalMult":100,"tentacleHealthMult":100,"struggleHealthMult":100,"blackwolfmonster":1,"greathawkmonster":1,"nightmonstermonster":1,"breastsizemin":0,"breastsizemax":12,"bottomsizemin":0,"bottomsizemax":8,"penissizemin":0,"penissizemax":6,"confirmSave":false,"confirmLoad":false,"confirmDelete":true,"reducedLineHeight":false},"npc":{"Avery":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Bailey":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Briar":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Charlie":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Darryl":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Doren":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Eden":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Gwylan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Harper":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Jordan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Kylar":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Landry":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Leighton":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Mason":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Morgan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"River":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Robin":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Sam":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Sirris":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Whitney":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Winter":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Black Wolf":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Niki":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Quinn":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Remy":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Alex":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Great Hawk":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Wren":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Sydney":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Ivory Wraith":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Zephyr":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Night Monster":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Riley":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1},"Poppy":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0,"maxOrgasms":1}},"starting":{"bodysize":2,"facevariant":"default","breastsensitivity":1,"genitalsensitivity":1,"mouthsensitivity":1,"bottomsensitivity":1,"alcoholMod":1,"eyeselect":"purple","hairselect":"red","hairlength":200,"awareselect":"innocent","startingseason":"autumn","gamemode":"normal","ironmanmode":false,"player":{"gender":"f","sex":"f","gender_body":"a","bodyshape":"classic","skin":{"color":"light"},"ballsExist":false,"freckles":false,"breastsize":0,"bottomsize":0}}};
+
+const SETTINGS_NEWWORLD = {"general":{"map":{},"shopDefaults":{"alwaysBackToShopButton":false,"color":"black","colourItems":"random","compactMode":false,"disableReturn":false,"highContrast":false,"mannequinGender":"same","mannequinGenderFromClothes":false,"noHelp":false,"noTraits":false,"secColor":"black"},"options":{"neverNudeMenus":false,"showCaptionText":true,"clothingCaption":true,"clothingReplacementWarning":false,"sidebarStats":"all","sidebarTime":"top","combatControls":"radio","mapMovement":true,"mapTop":false,"mapMarkers":false,"images":1,"combatImages":1,"bodywritingImages":true,"silhouetteEnabled":true,"sidebarAnimations":true,"blinkingEnabled":true,"combatAnimations":true,"halfClosedEnabled":false,"characterLightEnabled":true,"lightSpotlight":0.2,"lightGradient":0.1,"lightGlow":0.1,"lightFlat":0,"lightTFColor":0.2,"combatLightEnabled":true,"combatLightOffsetY":52,"combatLightSpotlight":0.2,"combatLightSpotlightX":118,"combatLightSpotlightY":15,"combatLightGradient":0,"combatLightGlow":0.1,"combatLightFlat":0,"combatLightTFColor":0.2,"maxStates":5,"historyControls":false,"useNarrowMarket":false,"skipStatisticsConfirmation":false,"passageCount":"disabled","playtime":false,"numberify_enabled":1,"timestyle":"military","tipdisable":false,"pepperSprayDisplay":"sprays","condomsDisplay":"standard","closeButtonMobile":false,"showDebugRenderer":false,"showCombatTools":false,"numpad":false,"traitOverlayFormat":"table","dateFormat":"en-GB"},"settings":{"analEnabled":true,"analingusGivingEnabled":true,"analingusReceivingEnabled":true,"transformAnimalEnabled":true,"asphyxiaLevel":3,"penisModifier":0,"breastModifier":0,"rentCostModifier":1,"baseNpcPregnancyChance":8,"basePlayerPregnancyChance":80,"beastMaleChanceSplit":false,"beastMaleChanceMale":80,"beastMaleChanceFemale":80,"beesEnabled":true,"bestialityEnabled":true,"blindStatsEnabled":false,"bodyWritingLevel":3,"breastFeedingEnabled":true,"cheatsEnabledToggle":false,"condomLevel":3,"clothingCostModifier":1,"furnitureCostModifier":1,"lewdClothingCostModifier":1,"schoolClothingCostModifier":1,"underwearCostModifier":1,"tendingYieldModifier":5,"toyDildoEnabled":true,"transformDivineEnabled":true,"analDoubleEnabled":true,"vaginalDoubleEnabled":true,"allureModifier":1,"facesitEnabled":true,"pregnancySpeechEnabled":true,"footFetishEnabled":true,"forcedCrossdressingEnabled":true,"horsesEnabled":true,"humanPregnancyMonths":3,"hypnosisEnabled":true,"npcVirginChanceAdult":10,"npcVirginChanceStudent":50,"darkSkinChance":10,"lurkersEnabled":true,"fertilityCycleEnabled":true,"toyMultiplePenetrationEnabled":true,"multipleWardrobes":false,"maleChanceSplit":false,"npcPregnancyEnabled":true,"maleChanceMale":50,"maleChanceFemale":50,"nudeGenderPerception":1,"monsterHallucinationsOnly":true,"parasitePregnancyEnabled":true,"parasitesEnabled":true,"beastMaleChance":80,"monsterChance":50,"maleNPCVaginaChance":0,"maleVictimChance":50,"maleChance":50,"femaleNPCPenisChance":0,"straponChance":0,"plantsEnabled":true,"playerPregnancyEggLayingEnabled":true,"playerPregnancyBeastEnabled":true,"playerPregnancyHumanEnabled":true,"pregnancyType":"realistic","pubicHairEnabled":false,"ruinedOrgasmEnabled":true,"skillCheckStyle":"percentage","slimesEnabled":true,"slugsEnabled":true,"spidersEnabled":true,"swarmsEnabled":true,"tentaclesEnabled":true,"voreEnabled":true,"waspsEnabled":true,"watersportsEnabled":false,"toyWhipEnabled":true,"wolfPregnancyWeeks":4},"wardrobeDefaults":{"showTraits":false,"extraInfo":false},"blackwolfmonster":1,"greathawkmonster":1,"nightmonstermonster":1,"breastsizemin":0,"breastsizemax":12,"bottomsizemin":0,"bottomsizemax":8,"penissizemin":0,"penissizemax":6,"confirmSave":false,"confirmLoad":false,"confirmDelete":true,"reducedLineHeight":false},"npc":{"Avery":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Bailey":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Briar":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Charlie":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Darryl":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Doren":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Eden":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Gwylan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Harper":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Jordan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Kylar":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Landry":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Leighton":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Mason":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Morgan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"River":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Robin":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Sam":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Sirris":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Whitney":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Winter":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Black Wolf":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Niki":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Quinn":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Remy":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Alex":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Great Hawk":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Wren":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Sydney":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Ivory Wraith":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Zephyr":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Night Monster":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Taylor":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Casey":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Salem":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Pruti":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Haegish":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Ash":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Mint Mocha":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0}},"starting":{"bodysize":2,"facevariant":"default","breastsensitivity":1,"genitalsensitivity":1,"mouthsensitivity":1,"bottomsensitivity":1,"alcoholMod":1,"eyeselect":"purple","hairselect":"red","hairlength":200,"awareselect":"innocent","background":"waif","startingseason":"autumn","gamemode":"normal","ironmanmode":false,"player":{"gender":"f","sex":"f","gender_body":"a","bodyshape":"classic","skin":{"color":"light"},"ballsExist":false,"freckles":false,"breastsize":0,"bottomsize":0}}};
 const FEAT_CATS = {
   "General": [
     { name: "It Belongs in a Museum!", desc: "Find all the artifacts.", link: "" },
@@ -734,10 +767,27 @@ const FEAT_CATS = {
 
 let currentMode = 'normal';
 let sexType = 'female';
+let genderType = 'woman';
+let gameModeChoice = 'random'; // 'random' or one of the DATA.gameMode values
 
 const activeMods = {
-  baileyExpansion: false
+  baileyExpansion: false,
+  newWorld: false,
+  plus: false
 };
+
+const NEW_WORLD_LOVE_INTERESTS = ['Casey', 'Salem'];
+const NEW_WORLD_TRANSFORMS = [
+  'Bee','Sheep','Deer','Bear','Dragon','Lizard','Dolphin','Raccoon',
+  'Dog','Fish','Horse','Frog','Spider','Bunny'
+];
+
+const NEW_WORLD_SPIRIT_TRANSFORMS = [
+  'Ghost','Ifrit','Undine','Yuki Onna','Slime','Lust Slime','Pure Slime','Mushroom'
+];
+
+const PLUS_LOVE_INTERESTS = ['Poppy'];
+const PLUS_ANIMAL_TRANSFORMS = ['Bunny'];
 
 const catEnabled = {};
 Object.keys(FEAT_CATS).forEach(c => catEnabled[c] = true);
@@ -774,10 +824,38 @@ function setSex(s) {
   document.getElementById('sex-h').classList.toggle('active', s === 'hermaphrodite');
 }
 
+function setGender(g) {
+  genderType = g;
+  document.getElementById('gender-f').classList.toggle('active', g === 'woman');
+  document.getElementById('gender-m').classList.toggle('active', g === 'man');
+  document.getElementById('gender-n').classList.toggle('active', g === 'neither');
+}
+
+function setGameMode(choice) {
+  gameModeChoice = choice;
+  ['random', 'Normal', 'Soft', 'Hard', 'Iron Mode'].forEach(id => {
+    document.getElementById('gm-' + id).classList.toggle('active', choice === id);
+  });
+}
+
 function toggleMod(modKey) {
   activeMods[modKey] = !activeMods[modKey];
   if (modKey === 'baileyExpansion') {
     document.getElementById('mod-bailey').classList.toggle('active', activeMods[modKey]);
+  }
+  if (modKey === 'newWorld') {
+    document.getElementById('mod-newworld').classList.toggle('active', activeMods[modKey]);
+    if (activeMods.newWorld && activeMods.plus) {
+      activeMods.plus = false;
+      document.getElementById('mod-plus').classList.remove('active');
+    }
+  }
+  if (modKey === 'plus') {
+    document.getElementById('mod-plus').classList.toggle('active', activeMods[modKey]);
+    if (activeMods.plus && activeMods.newWorld) {
+      activeMods.newWorld = false;
+      document.getElementById('mod-newworld').classList.remove('active');
+    }
   }
 }
 
@@ -927,62 +1005,129 @@ function togglePin(idx, cat, name) {
 function getRollPools() {
   const loveInterests = [...DATA.loveInterests];
   const virginity = [...DATA.virginity];
+  const animalTransform = [...DATA.animalTransform];
+  const divineTransform = [...DATA.divineTransform];
 
   if (activeMods.baileyExpansion) {
     if (!loveInterests.includes('Bailey')) loveInterests.push('Bailey');
     if (!virginity.includes('Bailey')) virginity.push('Bailey');
   }
 
+  if (activeMods.newWorld) {
+    NEW_WORLD_LOVE_INTERESTS.forEach(li => {
+      if (!loveInterests.includes(li)) loveInterests.push(li);
+    });
+    NEW_WORLD_TRANSFORMS.forEach(t => {
+      if (!animalTransform.includes(t)) animalTransform.push(t);
+    });
+    const noneIdx = animalTransform.indexOf('None');
+    if (noneIdx !== -1) animalTransform.splice(noneIdx, 1);
+    // Add Eldritch and Fae to the divine pool
+    if (!divineTransform.includes('Eldritch')) divineTransform.push('Eldritch');
+    if (!divineTransform.includes('Fae')) divineTransform.push('Fae');
+  }
+
+  if (activeMods.plus) {
+    PLUS_LOVE_INTERESTS.forEach(li => {
+      if (!loveInterests.includes(li)) loveInterests.push(li);
+    });
+    PLUS_ANIMAL_TRANSFORMS.forEach(t => {
+      if (!animalTransform.includes(t)) animalTransform.push(t);
+    });
+  }
+
+  const spiritTransform = activeMods.newWorld ? [...NEW_WORLD_SPIRIT_TRANSFORMS, 'None'] : ['None'];
+
   return {
     loveInterests,
-    virginity
+    virginity,
+    animalTransform,
+    divineTransform,
+    spiritTransform
   };
 }
+
+let lastRoll = null;
 
 function doRoll() {
   const hard = currentMode === 'hard';
   const xhard = currentMode === 'xhard';
   const anyHard = hard || xhard;
   const sex = sexType;
+  const gender = genderType;
 
   const pools = getRollPools();
 
   const awareness = pick(DATA.awareness);
   const background = pick(DATA.background);
-  const gameMode = pick(DATA.gameMode);
-  const bodySize = pick(DATA.bodySize);
+  const gameMode = gameModeChoice === 'random'
+    ? pick(DATA.gameMode.filter(m => m !== 'Soft'))
+    : gameModeChoice;
+  const bodySize = pick(activeMods.plus ? DATA.bodySizePlus : DATA.bodySize);
   const body = pick(DATA.body);
   const assSize = pick(DATA.assSize);
+  const assSizeIdx = DATA.assSize.indexOf(assSize);
   const eyeColour = pick(DATA.eyeColour);
   const hairColour = pick(DATA.hairColour);
   const hairLength = pick(DATA.hairLength);
 
   let organText = '';
+  let breastSizeVal = null, breastSizeIdx = -1;
+  let penisSizeVal = null, penisSizeIdx = -1;
   if (sex === 'male') {
-    organText = `a <strong>${pick(DATA.penisSize)}</strong> cock`;
+    penisSizeVal = pick(DATA.penisSize); penisSizeIdx = DATA.penisSize.indexOf(penisSizeVal);
+    organText = `a <strong>${penisSizeVal}</strong> cock`;
   } else if (sex === 'female') {
-    organText = `<strong>${pick(DATA.breastSize)}</strong> breasts`;
+    breastSizeVal = pick(DATA.breastSize); breastSizeIdx = DATA.breastSize.indexOf(breastSizeVal);
+    organText = `<strong>${breastSizeVal}</strong> breasts`;
   } else {
-    organText = `a <strong>${pick(DATA.penisSize)}</strong> cock and <strong>${pick(DATA.breastSize)}</strong> breasts`;
+    penisSizeVal = pick(DATA.penisSize); penisSizeIdx = DATA.penisSize.indexOf(penisSizeVal);
+    breastSizeVal = pick(DATA.breastSize); breastSizeIdx = DATA.breastSize.indexOf(breastSizeVal);
+    organText = `a <strong>${penisSizeVal}</strong> cock and <strong>${breastSizeVal}</strong> breasts`;
   }
 
-  const animalT = pick(DATA.animalTransform);
-  const divineT = xhard ? 'Angel' : pick(DATA.divineTransform);
+  const animalT = pick(pools.animalTransform);
+  const divineT = xhard ? 'Angel' : pick(pools.divineTransform);
+  const spiritT = pick(pools.spiritTransform);
   const hasAnimal = animalT !== 'None';
   const hasDivine = divineT !== 'None';
+  const hasSpirit = spiritT !== 'None';
   let transformText = '';
 
-  if (hasAnimal && hasDivine) {
-    const divineAdj = { 'Angel': 'an angelic', 'Succubus': 'a succubus', 'Fallen Angel': 'a fallen' };
-    transformText = `Your end transformation goal will be becoming <strong>${divineAdj[divineT] || divineT} ${animalT.toLowerCase()}</strong>.`;
-  } else if (hasAnimal) {
-    transformText = `Your end transformation goal will be becoming a <strong>${animalT.toLowerCase()}</strong>.`;
-  } else if (hasDivine) {
-    transformText = `Your end transformation goal will be becoming <strong>${divineT.toLowerCase()}</strong>.`;
+
+  const divineAdj  = { 'Angel': 'an angelic', 'Succubus': 'a succubus', 'Fallen Angel': 'a fallen', 'Eldritch': 'an eldritch', 'Fae': 'fae' };
+  const divineNoun = { 'Angel': 'angel', 'Succubus': 'succubus', 'Fallen Angel': 'fallen angel', 'Eldritch': 'eldritch', 'Fae': 'fae' };
+
+  if (hasAnimal || hasDivine || hasSpirit) {
+    let full;
+    if (hasDivine && !hasAnimal && !hasSpirit) {
+      const noun = divineNoun[divineT] || divineT.toLowerCase();
+      const article = /^[aeiou]/i.test(noun) ? 'an' : 'a';
+      full = `${article} ${noun}`;
+    } else {
+      const adj  = hasDivine ? (divineAdj[divineT] || divineT.toLowerCase()) : '';
+      const mid  = hasSpirit ? spiritT.toLowerCase() : '';
+      const noun = hasAnimal ? animalT.toLowerCase() : '';
+      const compound = [adj, mid, noun].filter(Boolean).join(' ');
+      const needsArticle = !hasDivine;
+      const article = needsArticle ? (/^[aeiou]/i.test(compound) ? 'an' : 'a') : '';
+      full = [article, compound].filter(Boolean).join(' ');
+    }
+    transformText = `Your end transformation goal will be becoming <strong>${full}</strong>.`;
   }
 
   let loveInterests;
-	if (anyHard && activeMods.baileyExpansion) {
+	if (anyHard && activeMods.baileyExpansion && activeMods.newWorld) {
+  // Hard + Bailey + New World: Gwylan, Bailey, one New World LI
+  const nwLI = pick(NEW_WORLD_LOVE_INTERESTS);
+  loveInterests = ['Gwylan', 'Bailey', nwLI];
+	} else if (anyHard && activeMods.newWorld) {
+  // Hard + New World: Gwylan + one New World LI + one random other
+  const nwLI = pick(NEW_WORLD_LOVE_INTERESTS);
+  const hardPool = pools.loveInterests.filter(x => x !== 'Gwylan' && x !== nwLI);
+  const others = pickN(hardPool, 1);
+  loveInterests = ['Gwylan', nwLI, ...others];
+	} else if (anyHard && activeMods.baileyExpansion) {
   // Force both Gwylan and Bailey in Hard / Extra Hard
   const hardPool = pools.loveInterests.filter(x => x !== 'Gwylan' && x !== 'Bailey');
   const others = pickN(hardPool, 1);
@@ -992,11 +1137,23 @@ function doRoll() {
   const hardPool = pools.loveInterests.filter(x => x !== 'Gwylan');
   const others = pickN(hardPool, 2);
   loveInterests = ['Gwylan', ...others];
+	} else if (activeMods.baileyExpansion && activeMods.newWorld) {
+  // Normal + Bailey + New World: Bailey, one New World LI, one random other
+  const nwLI = pick(NEW_WORLD_LOVE_INTERESTS);
+  const normalPool = pools.loveInterests.filter(x => x !== 'Bailey' && x !== nwLI);
+  const others = pickN(normalPool, 1);
+  loveInterests = ['Bailey', nwLI, ...others];
 	} else if (activeMods.baileyExpansion) {
   // Normal mode with Bailey mod always includes Bailey
   const normalPool = pools.loveInterests.filter(x => x !== 'Bailey');
   const others = pickN(normalPool, 2);
   loveInterests = ['Bailey', ...others];
+	} else if (activeMods.newWorld) {
+  // Normal + New World: one guaranteed New World LI + two random others
+  const nwLI = pick(NEW_WORLD_LOVE_INTERESTS);
+  const normalPool = pools.loveInterests.filter(x => x !== nwLI);
+  const others = pickN(normalPool, 2);
+  loveInterests = [nwLI, ...others];
 	} else {
   // Normal random roll
   loveInterests = pickN(pools.loveInterests, 3);
@@ -1049,10 +1206,11 @@ function doRoll() {
   });
 
   const artOrAn = awareness === 'Innocent' ? 'an innocent' : 'a knowledgeable';
+  const genderLabel = gender === 'woman' ? 'woman' : gender === 'man' ? 'man' : 'non-binary';
 
   let challengeHtml = '';
   challengeHtml += `<h3>${gameMode} Mode</h3>`;
-  challengeHtml += `<div class="result-block">You are playing as <strong>${artOrAn}</strong> <strong>${background.toLowerCase()}</strong> <strong>${sex}</strong> with a <strong>${body.toLowerCase()}</strong> and <strong>${bodySize.toLowerCase()}</strong> body. `;
+  challengeHtml += `<div class="result-block">You are playing as <strong>${artOrAn}</strong> <strong>${background.toLowerCase()}</strong> <strong>${sex}</strong> <strong>${genderLabel}</strong> with a <strong>${body.toLowerCase()}</strong> and <strong>${bodySize.toLowerCase()}</strong> body. `;
   challengeHtml += `You will have ${organText.toLowerCase()}, a <strong>${assSize.toLowerCase()}</strong> ass, <strong>${hairLength.toLowerCase()}-length</strong> <strong>${hairColour.toLowerCase()}</strong> hair, and <strong>${eyeColour.toLowerCase()}</strong> eyes. `;
   if (transformText) challengeHtml += transformText;
   challengeHtml += `</div>`;
@@ -1073,6 +1231,14 @@ function doRoll() {
 
   if (activeMods.baileyExpansion) {
     challengeHtml += `<div class="result-block"><strong>Additional Mod Active:</strong> Bailey Expansion</div>`;
+  }
+
+  if (activeMods.newWorld) {
+    challengeHtml += `<div class="result-block"><strong>Additional Mod Active:</strong> New World</div>`;
+  }
+
+  if (activeMods.plus) {
+    challengeHtml += `<div class="result-block"><strong>Additional Mod Active:</strong> Plus</div>`;
   }
 
   let featsHtml = '';
@@ -1105,6 +1271,11 @@ function doRoll() {
   if (hard) out.classList.add('hard-result');
   if (xhard) out.classList.add('xhard-result');
   out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+
+  lastRoll = { sex, gender, bodySize, body, eyeColour, hairColour, hairLength, awareness, background, gameMode,
+    breastSizeIdx, assSizeIdx, penisSizeIdx
+  };
 }
 
 function toggleCompletedFeat(row) {
@@ -1142,6 +1313,7 @@ function saveCurrentRun() {
   const saveData = {
     mode: currentMode,
     sex: sexType,
+    gender: genderType,
     activeMods: { ...activeMods },
     challengeHtml,
     featsHtml,
@@ -1178,13 +1350,17 @@ function loadSavedRun(showAlert = false) {
 
     currentMode = saveData.mode || 'normal';
     sexType = saveData.sex || 'female';
+    genderType = saveData.gender || 'woman';
 
     setMode(currentMode);
     setSex(sexType);
+    setGender(genderType);
 
     if (saveData.activeMods) {
       Object.keys(activeMods).forEach(k => activeMods[k] = !!saveData.activeMods[k]);
       document.getElementById('mod-bailey').classList.toggle('active', activeMods.baileyExpansion);
+      document.getElementById('mod-newworld').classList.toggle('active', activeMods.newWorld);
+      document.getElementById('mod-plus').classList.toggle('active', activeMods.plus);
     }
 
     if (saveData.catEnabled) {
@@ -1287,8 +1463,149 @@ function saveFeatsOnly() {
   screenshotElement(featsEl, 'challenge-feats.png');
 }
 
+function saveAllPNGs() {
+  const output = document.getElementById('output');
+  const featsEl = document.getElementById('output-feats');
+  const saveBtns = document.querySelectorAll('.save-btns');
+  saveBtns.forEach(el => el.style.visibility = 'hidden');
+
+  // 1) Full screenshot
+  html2canvas(output, { backgroundColor: '#13111f', useCORS: true, scale: 2 }).then(canvas1 => {
+    canvas1.toBlob(blob => {
+      const a = document.createElement('a');
+      a.download = 'challenge-screenshot.png';
+      a.href = URL.createObjectURL(blob);
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // 2) Challenge only (no feats)
+    const wasDisplay = featsEl.style.display;
+    featsEl.style.display = 'none';
+    return html2canvas(output, { backgroundColor: '#13111f', useCORS: true, scale: 2 }).then(canvas2 => {
+      featsEl.style.display = wasDisplay;
+      canvas2.toBlob(blob => {
+        const a = document.createElement('a');
+        a.download = 'challenge-no-feats.png';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      // 3) Feats only
+      if (!featsEl.innerHTML.trim()) return;
+      return html2canvas(featsEl, { backgroundColor: '#13111f', useCORS: true, scale: 2 }).then(canvas3 => {
+        canvas3.toBlob(blob => {
+          const a = document.createElement('a');
+          a.download = 'challenge-feats.png';
+          a.href = URL.createObjectURL(blob);
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+      });
+    });
+  }).finally(() => {
+    saveBtns.forEach(el => el.style.visibility = '');
+  });
+}
+
+function saveGameSettings() {
+  if (!lastRoll) {
+    alert('Roll a challenge first!');
+    return;
+  }
+
+  const isNewWorld = activeMods.newWorld;
+  const isPlus = activeMods.plus;
+
+  const base = isPlus ? JSON.parse(JSON.stringify(SETTINGS_PLUS)) : JSON.parse(JSON.stringify(SETTINGS_NEWWORLD));
+
+  const { sex, gender, bodySize, body, eyeColour, hairColour, hairLength, awareness, background, gameMode,
+    breastSizeIdx, assSizeIdx, penisSizeIdx } = lastRoll;
+
+
+  // eyeColour: DATA.eyeColour index → JSON key
+  const eyeMap = {
+    'Purple': 'purple', 'Dark Blue': 'dark blue', 'Light Blue': 'light blue',
+    'Amber': 'amber', 'Hazel': 'hazel', 'Green': 'green', 'Lime Green': 'lime green',
+    'Red': 'red', 'Pink': 'pink', 'Grey': 'grey', 'Light Grey': 'light grey'
+  };
+
+  // hairColour: DATA.hairColour → JSON key
+  const hairColourMap = {
+    'Red': 'red', 'Jet Black': 'jetblack', 'Black': 'black', 'Brown': 'brown',
+    'Soft Brown': 'softbrown', 'Light Brown': 'lightbrown', 'Burnt Orange': 'burntorange',
+    'Strawberry Blond': 'strawberryblond', 'Ginger': 'ginger', 'Blond': 'blond',
+    'Soft Blonde': 'softblonde', 'Platinum Blond': 'platinumblond', 'Ashy Blond': 'ashyblond',
+    'Blood Orange': 'bloodorange', 'Blue': 'blue', 'Deep Blue': 'deepblue', 'Neon Blue': 'neonblue',
+    'Green': 'green', 'Dark Lime': 'darklime', 'Toxic Green': 'toxicgreen', 'Teal': 'teal',
+    'Pink': 'pink', 'Bright Pink': 'brightpink', 'Hot Pink': 'hotpink', 'Soft Pink': 'softpink',
+    'Crimson': 'crimson', 'Purple': 'purple', 'Medium Purple': 'mediumpurple',
+    'White': 'white', 'Snow White': 'snowwhite'
+  };
+
+  // hairLength: DATA.hairLength array index → JSON value (100 per step)
+  const hairLengthIdx = DATA.hairLength.indexOf(hairLength);
+  const hairLengthVal = (hairLengthIdx + 1) * 100; // Ear=100, Neck=200, Chest=300, Waist=400, Knee=500, Floor=600
+
+  // bodySize: index in array → JSON value (0-based)
+  const bodySizeArr = isPlus ? DATA.bodySizePlus : DATA.bodySize;
+  const bodySizeVal = bodySizeArr.indexOf(bodySize);
+
+  // awareness
+  const awarenessVal = awareness.toLowerCase();
+
+  // background
+  const backgroundVal = background.toLowerCase();
+
+  // gameMode → ironman + gamemode
+  const isIronMan = gameMode === 'Iron Man';
+  const gameModeVal = isIronMan ? 'hard' : gameMode.toLowerCase();
+  const ironManVal = isIronMan;
+
+  // sex → "m" / "f" / "h"
+  const sexVal = sex === 'male' ? 'm' : sex === 'female' ? 'f' : 'h';
+
+  // gender → "m" / "f" / "n"
+  const genderVal = gender === 'man' ? 'm' : gender === 'woman' ? 'f' : 'n';
+
+  // body shape → JSON key
+  const bodyShapeMap = {
+    'Classic': 'classic', 'Slender': 'slender', 'Curvy': 'curvy', 'Soft': 'soft'
+  };
+
+  // Apply to starting
+  const s = base.starting;
+  s.bodysize = bodySizeVal;
+  s.eyeselect = eyeMap[eyeColour] || eyeColour.toLowerCase();
+  s.hairselect = hairColourMap[hairColour] || hairColour.toLowerCase();
+  s.hairlength = hairLengthVal;
+  s.awareselect = awarenessVal;
+  s.gamemode = gameModeVal;
+  s.ironmanmode = ironManVal;
+  s.background = backgroundVal;
+  s.player.sex = sexVal;
+  s.player.gender = genderVal;
+  s.player.gender_body = sex === 'female' ? 'f' : sex === 'male' ? 'm' : 'a';
+  s.player.bodyshape = bodyShapeMap[body] || body.toLowerCase();
+
+  // Size arrays — use rolled indices (clamped to valid range)
+  if (breastSizeIdx >= 0) s.player.breastsize = breastSizeIdx;
+  if (assSizeIdx >= 0) s.player.bottomsize = assSizeIdx;
+
+  const filename = 'game settings.json';
+  const blob = new Blob([JSON.stringify(base, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = filename;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 // INIT
 buildFeatUI();
+setGameMode('random');
+setGender('woman');
 loadSavedRun();
 </script>
 </body>
