@@ -169,14 +169,14 @@
 
   .section.open .section-body { display: block; }
 
-  .sex-toggle, .mod-toggle {
+  .sex-toggle {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
     margin-bottom: 0.6rem;
   }
 
-  .sex-btn, .mod-btn {
+  .sex-btn {
     font-size: 0.82rem;
     padding: 0.3rem 0.9rem;
     border-radius: 4px;
@@ -187,7 +187,7 @@
     transition: all 0.2s;
   }
 
-  .sex-btn.active, .mod-btn.active {
+  .sex-btn.active {
     border-color: var(--accent3);
     color: var(--accent3);
     background: rgba(110,240,208,0.08);
@@ -291,9 +291,10 @@
     background: rgba(255,255,255,0.03);
   }
 
-  .feat-item.pinned {
-    border-color: var(--gold);
-    background: rgba(224,176,96,0.06);
+  .feat-item.blacklisted {
+    border-color: var(--accent2);
+    background: rgba(240,96,144,0.08);
+    opacity: 0.58;
   }
 
   .feat-check {
@@ -310,7 +311,12 @@
     color: var(--gold);
   }
 
-  .feat-item.pinned .feat-check { border-color: var(--gold); }
+  .feat-item.blacklisted .feat-check {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .feat-item.blacklisted .feat-name { text-decoration: line-through; }
 
   .feat-name {
     font-size: 0.82rem;
@@ -466,22 +472,6 @@
   <div class="hard-note" id="hard-note-hard">Hard Mode: Love Interest locked to include <strong>Gwylan</strong></div>
   <div class="hard-note" id="hard-note-xhard">Extra Hard Mode: Love Interest locked to include <strong>Gwylan</strong> · Divine Transformation locked to <strong>Angel</strong></div>
 
-  <!-- mods -->
-  <div class="section open">
-    <div class="section-header" onclick="toggleSection(this)">
-      <h3>🧩 Additional Mods</h3>
-      <span class="chevron">ᛝ</span>
-    </div>
-    <div class="section-body">
-      <div class="mod-toggle">
-        <button class="mod-btn" id="mod-bailey" onclick="toggleMod('baileyExpansion')">Bailey Expansion</button>
-        <button class="mod-btn" id="mod-ivory" onclick="toggleMod('ivoryWraithExpansion')">Ivory Wraith Expansion</button>
-        <button class="mod-btn" id="mod-newworld" onclick="toggleMod('newWorld')">New World</button>
-      </div>
-      <div class="hint">Toggle extra content mods that affect the roll pool. <strong>New World</strong> already has the <strong>Bailey</strong> and <strong>Ivory Wraith</strong> expansion baked in.</div>
-    </div>
-  </div>
-
   <!-- genders n gennies -->
   <div class="section">
     <div class="section-header" onclick="toggleSection(this)">
@@ -520,7 +510,7 @@
         <button class="sex-btn" id="gm-Normal" onclick="setGameMode('Normal')">Normal</button>
         <button class="sex-btn" id="gm-Soft" onclick="setGameMode('Soft')">Soft</button>
         <button class="sex-btn" id="gm-Hard" onclick="setGameMode('Hard')">Hard</button>
-        <button class="sex-btn" id="gm-Iron MAn" onclick="setGameMode('Iron Man')">Iron Man</button>
+        <button class="sex-btn" id="gm-Iron Man" onclick="setGameMode('Iron Man')">Iron Man</button>
       </div>
     </div>
   </div>
@@ -532,7 +522,7 @@
       <span class="chevron">ᛝ</span>
     </div>
     <div class="section-body">
-      <div class="hint">Each enabled category draws <strong>4 feats</strong>. Click feats below to pin/unpin them so they always stay in the pool for that category.</div>
+      <div class="hint">Each enabled category draws <strong>4 random feats</strong>. Click any feat to blacklist it. Blacklisted feats will never be chosen.</div>
       <div class="feat-cat-tabs" id="feat-cat-tabs"></div>
       <div id="feat-panels"></div>
     </div>
@@ -540,7 +530,7 @@
 
 
   <div class="actions">
-    <button class="btn-roll" id="roll-btn" onclick="doRoll()">✦ Roll the Dice ✦</button>
+    <button class="btn-roll" id="roll-btn" type="button">✦ Roll the Dice ✦</button>
   </div>
 
   <div id="output">
@@ -562,6 +552,23 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+/* ============================================================================
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢀⡴⢲⡄⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⡞⠀⠀⡇⠀⢀⡴⠋⠁⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣸⠁⠀⠀⡇⣠⠟⠀⠀⠀⣼⣠⣤⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣿⠀⢠⢤⡿⠃⣀⠀⢀⡞⠉⠁⠀⠀⠈⠙⠶⡄⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣻⣰⡏⣼⢁⡴⠋⣰⠋⠀⠀⠀⠀⠀⠀⠀⠀⠹⡄⣀⡀⠀⠀⠀⠀
+⠀⠀⠀⢀⡾⠋⠉⠁⠀⠙⠁⠞⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⡈⢷⠀⠀⠀⠀
+⠀⠀⠀⣼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠀⠀⠀⠀⠀⠀⠀⢀⣧⡾⠁⠀⠀⠀
+⠀⠀⠀⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠀⠀⠀⠀⠀⠀⠀⣾⠃⠀⠀⠀⠀⠀
+⠀⠀⠀⣹⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠁⠀⠀⡀⠀⠀⢰⡾⠋⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢻⡇⣀⡀⠀⠺⣿⠇⠀⣀⣤⣄⣀⣠⣬⣥⣤⠾⠛⠁⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠉⠛⠓⠂⠤⠤⠖⠊⠉⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀Data stuff...
+============================================================================ */
 const DATA = {
   bodySize: ["Tiny","Small","Normal","Tall"],
   body: ["Classic","Slender","Curvy","Soft"],
@@ -572,12 +579,13 @@ const DATA = {
   hairColour: ["Red","Jet Black","Black","Brown","Soft Brown","Light Brown","Burnt Orange","Strawberry Blond","Ginger","Blond","Soft Blonde","Platinum Blond","Ashy Blond","Blood Orange","Blue","Deep Blue","Neon Blue","Green","Dark Lime","Toxic Green","Teal","Pink","Bright Pink","Hot Pink","Soft Pink","Crimson","Purple","Medium Purple","White","Snow White"],
   hairLength: ["Ear","Neck","Chest","Waist","Knee","Floor"],
   awareness: ["Innocent","Knowledgeable"],
-  background: ["Nerd","Athlete","Delinquent","Promiscuous","Exhibitionist","Deviant","Beautiful","Lustful","Dendrophile"],
+  background: ["Nerd","Athlete","Delinquent","Promiscuous","Exhibitionist","Deviant","Beautiful","Lustful","Dendrophile","Polyamorous","Ugly","True Innocence","Masochist","Sadist","Nudist","Insanity"],
   gameMode: ["Normal","Soft","Hard","Iron Man"],
-  loveInterests: ["Robin","Whitney","Eden","Kylar","Avery","Black Wolf","Great Hawk","Sydney","Gwylan","Alex"],
-  virginity: ["Robin","Whitney","Kylar","Eden","Avery","Leighton","Alex","Great Hawk","Wren","Black Wolf","Sydney","Harper","Morgan","Gwylan"],
-  animalTransform: ["Wolf","Cat","Cow","Harpy","Fox","Bunny","None"],
-  divineTransform: ["Angel","Succubus","Fallen Angel","None"],
+  loveInterests: ["Robin","Whitney","Eden","Kylar","Avery","Black Wolf","Great Hawk","Sydney","Gwylan","Alex","Bailey","Ivory Wraith","Casey","Salem","Pruti"],
+  virginity: ["Robin","Whitney","Kylar","Eden","Avery","Leighton","Alex","Great Hawk","Wren","Black Wolf","Sydney","Harper","Morgan","Gwylan","Bailey","Ivory Wraith"],
+  animalTransform: ["Wolf","Cat","Cow","Harpy","Fox","Bunny","Bee","Sheep","Deer","Bear","Dragon","Lizard","Dolphin","Raccoon","Dog","Fish","Horse","Frog","Spider","Doll"],
+  divineTransform: ["Angel","Succubus","Fallen Angel","Eldritch","Fae","None"],
+  spiritTransform: ["Ghost","Ifrit","Undine","Yuki Onna","Slime","Lust Slime","Pure Slime","Mushroom","None"],
   skills: ["Skulduggery","Dancing","Swimming","Athletics","Tending","Housekeeping","Brawling","Footwork","Striking"],
   fame: ["Combat","Kindness","Business","Social","Modelling"],
   sexualFame: ["Sex","Prostitution","Rape","Beast","Exhibitionism","Pregnancy"],
@@ -607,12 +615,33 @@ const DATA = {
     "and give birth at least three times"
   ],
   badEnding: ["Asylum","Underground Farm","Underground Brothel","Prison","Dog Pound","Mines","Island","Pirate Ship"],
-  alcoTolerance: ["Heavyweight", "Normal", "Lightweight"]
-  jobs: ["Private Investigator","Chef","Holy","Dancer","Masseuse"]
+  alcoTolerance: ["heavyweight", "normal", "lightweight"],
+  jobs: ["private investigator","chef","holy","dancer","masseuse","office", "farming","model"]
 };
+
+// Optional add-on challenge lines. Keep this defined even when no extra rules
+// are configured so rolling a challenge can always complete.
+const EXTRA_RANDOM_LINES = [];
+
+/* ============================================================================
+⠀⠀⠀⠀⣄⠀⠀⠀
+⢰⣤⣀⣼⣿⠀⠀⠀
+⠀⣱⠆⠀⢨⣓⣦⠄
+⠴⠷⠒⢆⣿⠅⠀⠀
+⠀⠀⠀⠈⠋⠂⠀⠀
+============================================================================ */
 
 // save files
 const SETTINGS_NEWWORLD = {"general":{"map":{},"shopDefaults":{"alwaysBackToShopButton":false,"color":"black","colourItems":"random","compactMode":false,"disableReturn":false,"highContrast":false,"mannequinGender":"same","mannequinGenderFromClothes":false,"noHelp":false,"noTraits":false,"secColor":"black"},"options":{"neverNudeMenus":false,"showCaptionText":true,"clothingCaption":true,"clothingReplacementWarning":false,"sidebarStats":"all","sidebarTime":"top","combatControls":"radio","mapMovement":true,"mapTop":false,"mapMarkers":false,"images":1,"combatImages":1,"bodywritingImages":true,"silhouetteEnabled":true,"sidebarAnimations":true,"blinkingEnabled":true,"combatAnimations":true,"halfClosedEnabled":false,"characterLightEnabled":true,"lightSpotlight":0.2,"lightGradient":0.1,"lightGlow":0.1,"lightFlat":0,"lightTFColor":0.2,"combatLightEnabled":true,"combatLightOffsetY":52,"combatLightSpotlight":0.2,"combatLightSpotlightX":118,"combatLightSpotlightY":15,"combatLightGradient":0,"combatLightGlow":0.1,"combatLightFlat":0,"combatLightTFColor":0.2,"maxStates":5,"historyControls":false,"useNarrowMarket":false,"skipStatisticsConfirmation":false,"passageCount":"disabled","playtime":false,"numberify_enabled":1,"timestyle":"military","tipdisable":false,"pepperSprayDisplay":"sprays","condomsDisplay":"standard","closeButtonMobile":false,"showDebugRenderer":false,"showCombatTools":false,"numpad":false,"traitOverlayFormat":"table","dateFormat":"en-GB"},"settings":{"analEnabled":true,"analingusGivingEnabled":true,"analingusReceivingEnabled":true,"transformAnimalEnabled":true,"asphyxiaLevel":3,"penisModifier":0,"breastModifier":0,"rentCostModifier":1,"baseNpcPregnancyChance":8,"basePlayerPregnancyChance":80,"beastMaleChanceSplit":false,"beastMaleChanceMale":80,"beastMaleChanceFemale":80,"beesEnabled":true,"bestialityEnabled":true,"blindStatsEnabled":false,"bodyWritingLevel":3,"breastFeedingEnabled":true,"cheatsEnabledToggle":false,"condomLevel":3,"clothingCostModifier":1,"furnitureCostModifier":1,"lewdClothingCostModifier":1,"schoolClothingCostModifier":1,"underwearCostModifier":1,"tendingYieldModifier":5,"toyDildoEnabled":true,"transformDivineEnabled":true,"analDoubleEnabled":true,"vaginalDoubleEnabled":true,"allureModifier":1,"facesitEnabled":true,"pregnancySpeechEnabled":true,"footFetishEnabled":true,"forcedCrossdressingEnabled":true,"horsesEnabled":true,"humanPregnancyMonths":3,"hypnosisEnabled":true,"npcVirginChanceAdult":10,"npcVirginChanceStudent":50,"darkSkinChance":10,"lurkersEnabled":true,"fertilityCycleEnabled":true,"toyMultiplePenetrationEnabled":true,"multipleWardrobes":false,"maleChanceSplit":false,"npcPregnancyEnabled":true,"maleChanceMale":50,"maleChanceFemale":50,"nudeGenderPerception":1,"monsterHallucinationsOnly":true,"parasitePregnancyEnabled":true,"parasitesEnabled":true,"beastMaleChance":80,"monsterChance":50,"maleNPCVaginaChance":0,"maleVictimChance":50,"maleChance":50,"femaleNPCPenisChance":0,"straponChance":0,"plantsEnabled":true,"playerPregnancyEggLayingEnabled":true,"playerPregnancyBeastEnabled":true,"playerPregnancyHumanEnabled":true,"pregnancyType":"realistic","pubicHairEnabled":false,"ruinedOrgasmEnabled":true,"skillCheckStyle":"percentage","slimesEnabled":true,"slugsEnabled":true,"spidersEnabled":true,"swarmsEnabled":true,"tentaclesEnabled":true,"voreEnabled":true,"waspsEnabled":true,"watersportsEnabled":false,"toyWhipEnabled":true,"wolfPregnancyWeeks":4},"wardrobeDefaults":{"showTraits":false,"extraInfo":false},"blackwolfmonster":1,"greathawkmonster":1,"nightmonstermonster":1,"breastsizemin":0,"breastsizemax":12,"bottomsizemin":0,"bottomsizemax":8,"penissizemin":0,"penissizemax":6,"confirmSave":false,"confirmLoad":false,"confirmDelete":true,"reducedLineHeight":false},"npc":{"Avery":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Bailey":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Briar":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Charlie":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Darryl":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Doren":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Eden":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Gwylan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Harper":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Jordan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Kylar":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Landry":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Leighton":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Mason":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Morgan":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"River":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Robin":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Sam":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Sirris":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Whitney":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Winter":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Black Wolf":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Niki":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Quinn":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Remy":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Alex":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Great Hawk":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Wren":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Sydney":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Ivory Wraith":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Zephyr":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Night Monster":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Taylor":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Casey":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Salem":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Pruti":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Haegish":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Ash":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0},"Mint Mocha":{"pronoun":"none","gender":"none","penissize":0,"breastsize":0}},"starting":{"bodysize":2,"facevariant":"default","breastsensitivity":1,"genitalsensitivity":1,"mouthsensitivity":1,"bottomsensitivity":1,"alcoholMod":1,"eyeselect":"purple","hairselect":"red","hairlength":200,"awareselect":"innocent","background":"waif","startingseason":"autumn","gamemode":"normal","ironmanmode":false,"player":{"gender":"f","sex":"f","gender_body":"a","bodyshape":"classic","skin":{"color":"light"},"ballsExist":false,"freckles":false,"breastsize":0,"bottomsize":0}}};
+/*
+⠀⢀⠤⣀⣀⣴⣶⣔⢂⠀⠀
+⠀⠸⠀⠀⠀⠻⠿⢿⣿⡇⠀
+⢀⣸ ⢠⠀⠀⠀⢠⠀⣗⡂
+⠀⢚⣄⠀⠛⠀⢀⡰⢷⠀
+⠀⢠⢎⣿⣿⣭⣽⣿⡄⠜⠀
+⠀⠘⢺⣿⣿⣿⣿⣿⡇⠀⠀
+⠀⠀⠐⠤⠤⠼⠤⠤⠄⠀⠀
+*/
 const FEAT_CATS = {
   "General": [
     { name: "It Belongs in a Museum!", desc: "Find all the artifacts.", link: "" },
@@ -769,16 +798,8 @@ const FEAT_CATS = {
 let currentMode = 'normal';
 let sexType = 'female';
 let genderType = 'woman';
-let gameModeChoice = 'random'; 
+let gameModeChoice = 'random';
 
-const activeMods = {
-  baileyExpansion: false,
-  ivoryWraithExpansion: false,
-  newWorld: false
-};
-
-const NEW_WORLD_LOVE_INTERESTS = ['Casey', 'Salem'];
-const NEW_WORLD_BACKGROUNDS = ['Polyamorous', 'Ugly', 'True Innocence', 'Masochist', 'Sadist', 'Ugly', 'Nudist', 'Insanity'];
 const BACKGROUND_EXCLUSIONS = {
   Masochist: ['Sadist'],
   Sadist: ['Masochist'],
@@ -799,22 +820,13 @@ function pickCompatibleBackgrounds(pool, count) {
   }
   return result;
 }
-const NEW_WORLD_TRANSFORMS = [
-  'Bee','Sheep','Deer','Bear','Dragon','Lizard','Dolphin','Raccoon',
-  'Dog','Fish','Horse','Frog','Spider','Bunny'
-];
-
-const NEW_WORLD_SPIRIT_TRANSFORMS = [
-  'Ghost','Ifrit','Undine','Yuki Onna','Slime','Lust Slime','Pure Slime','Mushroom'
-];
-
 const catEnabled = {};
 Object.keys(FEAT_CATS).forEach(c => catEnabled[c] = true);
 
-const pinnedFeats = {};
-Object.keys(FEAT_CATS).forEach(c => pinnedFeats[c] = new Set());
+const blacklistedFeats = {};
+Object.keys(FEAT_CATS).forEach(c => blacklistedFeats[c] = new Set());
 
-const SAVE_KEY = 'dolChallengeSavedRun_v2';
+const SAVE_KEY = 'dolChallengeSavedRun_v4';
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -829,6 +841,26 @@ function pickN(arr, n) {
     out.push(copy.splice(idx, 1)[0]);
   }
   return out;
+}
+
+function joinNatural(items) {
+  if (items.length <= 1) return items[0] || '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+}
+
+function rollExtraRandomLines() {
+  return EXTRA_RANDOM_LINES.map(rule => {
+    const pool = DATA[rule.pool];
+    if (!Array.isArray(pool) || pool.length === 0) {
+      console.warn(`Skipped extra random line: DATA.${rule.pool} is missing or empty.`);
+      return '';
+    }
+
+    const chosen = pickN(pool, Math.max(1, rule.count || 1));
+    const formattedChoices = joinNatural(chosen.map(value => `<strong>${value}</strong>`));
+    return `<div class="result-block">${rule.before || ''}${formattedChoices}${rule.after || ''}</div>`;
+  }).join('');
 }
 
 function toggleSection(headerEl) {
@@ -852,28 +884,10 @@ function setGender(g) {
 
 function setGameMode(choice) {
   gameModeChoice = choice;
-  ['random', 'Normal', 'Soft', 'Hard', 'Iron Mode'].forEach(id => {
-    document.getElementById('gm-' + id).classList.toggle('active', choice === id);
+  ['random', 'Normal', 'Soft', 'Hard', 'Iron Man'].forEach(id => {
+    const button = document.getElementById('gm-' + id);
+    if (button) button.classList.toggle('active', choice === id);
   });
-}
-
-function toggleMod(modKey) {
-  activeMods[modKey] = !activeMods[modKey];
-  if (modKey === 'baileyExpansion') {
-    document.getElementById('mod-bailey').classList.toggle('active', activeMods[modKey]);
-  }
-  if (modKey === 'ivoryWraithExpansion') {
-    document.getElementById('mod-ivory').classList.toggle('active', activeMods[modKey]);
-  }
-  if (modKey === 'newWorld') {
-    document.getElementById('mod-newworld').classList.toggle('active', activeMods[modKey]);
-    if (activeMods.newWorld) {
-      activeMods.baileyExpansion = true;
-      activeMods.ivoryWraithExpansion = true;
-      document.getElementById('mod-bailey').classList.add('active');
-      document.getElementById('mod-ivory').classList.add('active');
-    }
-  }
 }
 
 function setMode(m) {
@@ -922,7 +936,7 @@ function buildFeatUI() {
     info.className = 'feat-panel-info';
     info.id = 'cat-info-' + ci;
     info.innerHTML = catEnabled[cat]
-      ? `4 feats will be drawn — <span id="pin-count-${ci}">${pinnedFeats[cat].size}</span> pinned`
+      ? `4 feats will be drawn — <span id="blacklist-count-${ci}">${blacklistedFeats[cat].size}</span> blacklisted`
       : `<em>Disabled — no feats drawn</em>`;
     hdr.appendChild(info);
 
@@ -943,12 +957,12 @@ function buildFeatUI() {
       item.className = 'feat-item';
       item.dataset.cat = cat;
       item.dataset.name = feat.name;
-      if (pinnedFeats[cat].has(feat.name)) item.classList.add('pinned');
-      item.onclick = () => togglePin(ci, cat, feat.name);
+      if (blacklistedFeats[cat].has(feat.name)) item.classList.add('blacklisted');
+      item.onclick = () => toggleBlacklist(ci, cat, feat.name);
 
       const chk = document.createElement('div');
       chk.className = 'feat-check';
-      chk.textContent = '✓';
+      chk.textContent = '×';
 
       const info2 = document.createElement('div');
       info2.style.flex = '1';
@@ -997,65 +1011,35 @@ function showPanel(idx) {
 function toggleCat(idx, cat) {
   catEnabled[cat] = !catEnabled[cat];
   const en = catEnabled[cat];
-  const pinCount = pinnedFeats[cat].size;
+  const blacklistCount = blacklistedFeats[cat].size;
   document.getElementById('cat-info-' + idx).innerHTML = en
-    ? `4 feats will be drawn — <span id="pin-count-${idx}">${pinCount}</span> pinned`
+    ? `4 feats will be drawn — <span id="blacklist-count-${idx}">${blacklistCount}</span> blacklisted`
     : `<em>Disabled — no feats drawn</em>`;
   document.getElementById('disable-btn-' + idx).textContent = en ? 'Disable Category' : 'Enable Category';
   document.getElementById('tab-' + idx).classList.toggle('disabled-cat', !en);
 }
 
-function togglePin(idx, cat, name) {
-  const set = pinnedFeats[cat];
+function toggleBlacklist(idx, cat, name) {
+  const set = blacklistedFeats[cat];
   if (set.has(name)) set.delete(name);
   else set.add(name);
 
-  const pinned = set.has(name);
+  const blacklisted = set.has(name);
 
   document.querySelectorAll(`.feat-item[data-cat="${cat}"][data-name="${CSS.escape(name)}"]`)
-    .forEach(el => el.classList.toggle('pinned', pinned));
+    .forEach(el => el.classList.toggle('blacklisted', blacklisted));
 
-  const countEl = document.getElementById('pin-count-' + idx);
+  const countEl = document.getElementById('blacklist-count-' + idx);
   if (countEl) countEl.textContent = set.size;
 }
 
 function getRollPools() {
-  const loveInterests = [...DATA.loveInterests];
-  const virginity = [...DATA.virginity];
-  const animalTransform = [...DATA.animalTransform];
-  const divineTransform = [...DATA.divineTransform];
-
-  if (activeMods.baileyExpansion) {
-    if (!loveInterests.includes('Bailey')) loveInterests.push('Bailey');
-    if (!virginity.includes('Bailey')) virginity.push('Bailey');
-  }
-
-  if (activeMods.ivoryWraithExpansion) {
-    if (!loveInterests.includes('Ivory Wraith')) loveInterests.push('Ivory Wraith');
-    if (!virginity.includes('Ivory Wraith')) virginity.push('Ivory Wraith');
-  }
-
-  if (activeMods.newWorld) {
-    NEW_WORLD_LOVE_INTERESTS.forEach(li => {
-      if (!loveInterests.includes(li)) loveInterests.push(li);
-    });
-    NEW_WORLD_TRANSFORMS.forEach(t => {
-      if (!animalTransform.includes(t)) animalTransform.push(t);
-    });
-    const noneIdx = animalTransform.indexOf('None');
-    if (noneIdx !== -1) animalTransform.splice(noneIdx, 1);
-    if (!divineTransform.includes('Eldritch')) divineTransform.push('Eldritch');
-    if (!divineTransform.includes('Fae')) divineTransform.push('Fae');
-  }
-
-  const spiritTransform = activeMods.newWorld ? [...NEW_WORLD_SPIRIT_TRANSFORMS, 'None'] : ['None'];
-
   return {
-    loveInterests,
-    virginity,
-    animalTransform,
-    divineTransform,
-    spiritTransform
+    loveInterests: [...DATA.loveInterests],
+    virginity: [...DATA.virginity],
+    animalTransform: [...DATA.animalTransform],
+    divineTransform: [...DATA.divineTransform],
+    spiritTransform: [...DATA.spiritTransform]
   };
 }
 
@@ -1072,11 +1056,10 @@ function doRoll() {
   const pools = getRollPools();
 
   const awareness = pick(DATA.awareness);
-  let backgroundPool = [...DATA.background];
-  if (activeMods.newWorld) backgroundPool.push(...NEW_WORLD_BACKGROUNDS);
-  const backgroundList = activeMods.newWorld
-    ? pickCompatibleBackgrounds(backgroundPool, Math.random() < 0.5 ? 1 : 2)
-    : [pick(backgroundPool)];
+  const eligibleBackgrounds = awareness === 'Knowledgeable'
+    ? DATA.background.filter(background => background !== 'True Innocence')
+    : DATA.background;
+  const backgroundList = pickCompatibleBackgrounds(eligibleBackgrounds, Math.random() < 0.5 ? 1 : 2);
   const background = backgroundList[0];
   const backgroundText = backgroundList.map(b => b.toLowerCase()).join(' and ');
   const gameMode = gameModeChoice === 'random'
@@ -1140,16 +1123,7 @@ function doRoll() {
     const guaranteed = [];
     if (anyHard) guaranteed.push('Gwylan');
 
-    if (activeMods.newWorld) {
-      if (activeMods.baileyExpansion && Math.random() < 0.5) guaranteed.push('Bailey');
-      if (activeMods.ivoryWraithExpansion && Math.random() < 0.5) guaranteed.push('Ivory Wraith');
-      guaranteed.push(pick(NEW_WORLD_LOVE_INTERESTS));
-    } else {
-      if (activeMods.baileyExpansion) guaranteed.push('Bailey');
-      if (activeMods.ivoryWraithExpansion) guaranteed.push('Ivory Wraith');
-    }
-
-    const baseSlots = activeMods.newWorld ? 4 : 3;
+    const baseSlots = 4;
     const totalSlots = Math.max(baseSlots, guaranteed.length);
     const remainingSlots = totalSlots - guaranteed.length;
     const remainingPool = pools.loveInterests.filter(x => !guaranteed.includes(x));
@@ -1173,6 +1147,8 @@ function doRoll() {
   const bdsm = pick(DATA.bdsm);
   const sexualFame = pick(DATA.sexualFame);
   const sexTrait = pick(DATA.sexTrait);
+  const job = pick(DATA.jobs);
+  const alcoholTolerance = pick(DATA.alcoTolerance);
   const parasite = pick(DATA.parasite);
   const badEnding = xhard ? null : pick(DATA.badEnding);
 
@@ -1189,18 +1165,8 @@ function doRoll() {
   Object.keys(FEAT_CATS).forEach(cat => {
     if (!catEnabled[cat]) return;
 
-    const pinned = FEAT_CATS[cat].filter(f => pinnedFeats[cat].has(f.name));
-    const unpinned = FEAT_CATS[cat].filter(f => !pinnedFeats[cat].has(f.name));
-
-    let chosen;
-    if (pinned.length >= 4) {
-      chosen = pinned.slice(0, 4);
-    } else {
-      const needed = 4 - pinned.length;
-      chosen = [...pinned, ...pickN(unpinned, needed)];
-    }
-
-    drawnByCat[cat] = chosen;
+    const allowedFeats = FEAT_CATS[cat].filter(f => !blacklistedFeats[cat].has(f.name));
+    drawnByCat[cat] = pickN(allowedFeats, 4);
   });
 
   const artOrAn = awareness === 'Innocent' ? 'an innocent' : 'a knowledgeable';
@@ -1209,7 +1175,7 @@ function doRoll() {
   let challengeHtml = '';
   challengeHtml += `<h3>${gameMode} Mode</h3>`;
   challengeHtml += `<div class="result-block">You are playing as <strong>${artOrAn}</strong> <strong>${backgroundText}</strong> <strong>${sex}</strong> <strong>${genderLabel}</strong> with a <strong>${body.toLowerCase()}</strong> and <strong>${bodySize.toLowerCase()}</strong> body. `;
-  challengeHtml += `You will have ${organText.toLowerCase()}, a <strong>${assSize.toLowerCase()}</strong> ass, <strong>${hairLength.toLowerCase()}-length</strong> <strong>${hairColour.toLowerCase()}</strong> hair, and <strong>${eyeColour.toLowerCase()}</strong> eyes. `;
+  challengeHtml += `You will have ${organText.toLowerCase()}, a <strong>${assSize.toLowerCase()}</strong> ass, <strong>${hairLength.toLowerCase()}-length</strong> <strong>${hairColour.toLowerCase()}</strong> hair, and <strong>${eyeColour.toLowerCase()}</strong> eyes. You will be a <strong>${alcoholTolerance}</strong> in regards to drinking. `;
   if (transformText) challengeHtml += transformText + ' ';
   challengeHtml += `</div>`;
 
@@ -1223,24 +1189,14 @@ function doRoll() {
 
   challengeHtml += `<div class="result-block">At school, aim to be a <strong>${socialSchool.toLowerCase()}</strong> and a <strong>${socialTeacher.toLowerCase()}</strong>. Outside of the social sphere, you must increase your education skills so that you can earn at least <strong>${school}</strong>. Learn at least <strong>${recipe}</strong>, sell at least <strong>${merchant}</strong> items at the Market Stall, and earn at least <strong>${money}</strong> in total.</div>`;
 
-  challengeHtml += `<div class="result-block">Bring your <strong>${skills[0]}</strong> and <strong>${skills[1]}</strong> skills to S tier, along with your <strong>${fame}</strong> fame. Your <strong>${bdsm}</strong> skill should be maxed, and your <strong>${sexualFame}</strong> fame maxed out. Your main goal trait wise is to gain the <strong>${sexTrait}</strong> trait.</div>`;
+  challengeHtml += `<div class="result-block">Bring your <strong>${skills[0]}</strong> and <strong>${skills[1]}</strong> skills to S tier, along with your <strong>${fame}</strong> fame. Your <strong>${bdsm}</strong> skill should be maxed, and your <strong>${sexualFame}</strong> fame maxed out. Your main goal trait wise is to gain the <strong>${sexTrait}</strong> trait. You should also focus on rising in the <strong>${job}</strong> career.</div>`;
 
   challengeHtml += `<div class="result-block">In terms of offspring, you must <strong>${parasite}</strong> <strong>${birthText}</strong>.</div>`;
 
+  challengeHtml += rollExtraRandomLines();
+
   if (badEnding) {
     challengeHtml += `<div class="result-block">You must trigger and escape the <strong>${badEnding}</strong> bad ending.</div>`;
-  }
-
-  if (activeMods.baileyExpansion) {
-    challengeHtml += `<div class="result-block"><strong>Additional Mod Active:</strong> Bailey Expansion</div>`;
-  }
-
-  if (activeMods.ivoryWraithExpansion) {
-    challengeHtml += `<div class="result-block"><strong>Additional Mod Active:</strong> Ivory Wraith Expansion</div>`;
-  }
-
-  if (activeMods.newWorld) {
-    challengeHtml += `<div class="result-block"><strong>Additional Mod Active:</strong> New World</div>`;
   }
 
   let featsHtml = '';
@@ -1316,13 +1272,13 @@ function saveCurrentRun() {
     mode: currentMode,
     sex: sexType,
     gender: genderType,
-    activeMods: { ...activeMods },
+    gameModeChoice,
     challengeHtml,
     featsHtml,
     completedFeats: getCompletedFeatIds(),
     catEnabled: { ...catEnabled },
-    pinnedFeats: Object.fromEntries(
-      Object.entries(pinnedFeats).map(([k, v]) => [k, [...v]])
+    blacklistedFeats: Object.fromEntries(
+      Object.entries(blacklistedFeats).map(([k, v]) => [k, [...v]])
     )
   };
 
@@ -1353,17 +1309,12 @@ function loadSavedRun(showAlert = false) {
     currentMode = saveData.mode || 'normal';
     sexType = saveData.sex || 'female';
     genderType = saveData.gender || 'woman';
+    gameModeChoice = saveData.gameModeChoice || 'random';
 
     setMode(currentMode);
     setSex(sexType);
     setGender(genderType);
-
-    if (saveData.activeMods) {
-      Object.keys(activeMods).forEach(k => activeMods[k] = !!saveData.activeMods[k]);
-      document.getElementById('mod-bailey').classList.toggle('active', activeMods.baileyExpansion);
-      document.getElementById('mod-ivory').classList.toggle('active', activeMods.ivoryWraithExpansion);
-      document.getElementById('mod-newworld').classList.toggle('active', activeMods.newWorld);
-    }
+    setGameMode(gameModeChoice);
 
     if (saveData.catEnabled) {
       Object.keys(saveData.catEnabled).forEach(k => {
@@ -1371,9 +1322,9 @@ function loadSavedRun(showAlert = false) {
       });
     }
 
-    if (saveData.pinnedFeats) {
-      Object.keys(saveData.pinnedFeats).forEach(k => {
-        if (k in pinnedFeats) pinnedFeats[k] = new Set(saveData.pinnedFeats[k]);
+    if (saveData.blacklistedFeats) {
+      Object.keys(saveData.blacklistedFeats).forEach(k => {
+        if (k in blacklistedFeats) blacklistedFeats[k] = new Set(saveData.blacklistedFeats[k]);
       });
     }
 
@@ -1588,7 +1539,21 @@ function saveGameSettings() {
 buildFeatUI();
 setGameMode('random');
 setGender('woman');
+document.getElementById('roll-btn').addEventListener('click', () => {
+  try {
+    doRoll();
+  } catch (error) {
+    console.error('Challenge roll failed:', error);
+    const output = document.getElementById('output');
+    document.getElementById('output-challenge').innerHTML = '<div class="result-block"><strong>Could not generate this roll.</strong> Please refresh the page and try again.</div>';
+    document.getElementById('output-feats').innerHTML = '';
+    output.style.display = 'block';
+  }
+});
 loadSavedRun();
+
+
 </script>
+
 </body>
 </html>
